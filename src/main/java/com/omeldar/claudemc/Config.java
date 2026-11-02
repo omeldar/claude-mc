@@ -19,12 +19,23 @@ public final class Config {
     /** Model alias or exact id passed to --model. Anything the CLI accepts works. */
     public String model = "opus";
     /**
-     * The list the in-game model button cycles through. Add exact ids here to switch between
-     * specific versions rather than aliases - an alias always means the newest of its family.
+     * The list the in-game model button cycles through.
+     *
+     * <p>Exact ids first, because an alias always means the newest of its family - "opus" is
+     * claude-opus-5-5 today and something else later. Verified against the CLI:
+     * claude-opus-4-8, claude-opus-5, claude-opus-5-5 and claude-opus-4-5 are all distinct,
+     * while claude-opus-4-1 quietly resolves to 5-5 and short forms like "opus-4.8" are
+     * rejected outright. Add any id you like; the mod remembers what you type.
      */
     public String[] models = {
-        "opus", "sonnet", "haiku", "fable",
-        "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"
+        "claude-opus-4-8",
+        "claude-opus-5",
+        "claude-opus-5-5",
+        "opus",
+        "sonnet",
+        "claude-sonnet-5-5",
+        "haiku",
+        "fable"
     };
     /** Passed to --effort when non-empty: low, medium, high. */
     public String effort = "";
