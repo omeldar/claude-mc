@@ -1,6 +1,7 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -24,13 +25,17 @@ import java.util.function.Consumer;
  * <p>No API key is involved: this drives the player's own installed {@code claude}, so it uses
  * whatever subscription or auth that CLI already has. Sessions are kept alive with
  * {@code --session-id} on the first turn and {@code --resume} after that, so Claude remembers
- * the whole conversation across prompts.
+ * the whole conversation across prompts and across restarts.
+ *
+ * <p>Output is read as a stream, so the player sees progress - each assistant turn and each
+ * world tool call - instead of a frozen "thinking..." until the whole answer lands.
  */
 public final class ClaudeRunner {
     private static final Gson GSON = new Gson();
 
     private static volatile String sessionId = null;
     private static volatile boolean busy = false;
+    private static volatile Process current = null;
 
     private ClaudeRunner() {}
 
@@ -54,7 +59,7 @@ public final class ClaudeRunner {
                 if (!s.isEmpty()) sessionId = s;
             }
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.debug("no session to restore", e);
+            ClaudeMCClient.LOG.debug("no session to restore", e);
         }
     }
 
@@ -66,8 +71,16 @@ public final class ClaudeRunner {
         } catch (Exception ignored) {}
     }
 
+    /** Kills an in-flight request. */
+    public static boolean abort() {
+        Process p = current;
+        if (p == null || !p.isAlive()) return false;
+        p.destroyForcibly();
+        return true;
+    }
+
     private static final String CONTRACT = """
-            You are driving a live Minecraft Java Edition client through the ClaudeCraft mod. \
+            You are driving a live Minecraft Java Edition client through the ClaudeMC mod. \
             A player is in-game reading your reply in chat. Answer briefly in plain text - chat \
             lines are narrow. Read context.json in your working directory before answering \
             anything that depends on where the player is; it is rewritten before every message. \
@@ -90,43 +103,49 @@ public final class ClaudeRunner {
     /**
      * Sends a prompt to Claude on a background thread.
      *
-     * @param prompt      what the player typed, plus any attachment notes
-     * @param onProposal  called off-thread with the parsed result; may be a proposal with no commands
-     * @param onError     called off-thread with a human-readable failure
+     * @param prompt     what the player typed, plus any attachment notes
+     * @param onProgress called off-thread as each assistant turn or tool call lands
+     * @param onProposal called off-thread with the parsed result
+     * @param onError    called off-thread with a human-readable failure
      */
-    public static void ask(String prompt, Consumer<Proposal> onProposal, Consumer<String> onError) {
+    public static void ask(String prompt,
+                           Consumer<String> onProgress,
+                           Consumer<Proposal> onProposal,
+                           Consumer<String> onError) {
         if (busy) {
-            onError.accept("already waiting on a reply - use /ai cancel to drop it");
+            onError.accept("already waiting on a reply - use /claude cancel to drop it");
             return;
         }
         busy = true;
         Thread t = new Thread(() -> {
             try {
-                Proposal p = run(prompt);
-                onProposal.accept(p);
+                onProposal.accept(run(prompt, onProgress));
             } catch (Exception e) {
-                ClaudeCraftClient.LOG.warn("claude call failed", e);
+                ClaudeMCClient.LOG.warn("claude call failed", e);
                 onError.accept(e.getMessage() == null ? e.toString() : e.getMessage());
             } finally {
                 busy = false;
+                current = null;
             }
-        }, "claudecraft-cli");
+        }, "claudemc-cli");
         t.setDaemon(true);
         t.start();
     }
 
-    private static Proposal run(String prompt) throws Exception {
+    private static Proposal run(String prompt, Consumer<String> onProgress) throws Exception {
         Config cfg = Config.get();
         Workspace.ensure();
 
         boolean resuming = sessionId != null;
         String sid = resuming ? sessionId : UUID.randomUUID().toString();
+        boolean streaming = cfg.streaming;
 
         List<String> args = new ArrayList<>();
         args.add(resolveExecutable());
         args.add("-p");
         args.add("--output-format");
-        args.add("json");
+        args.add(streaming ? "stream-json" : "json");
+        if (streaming) args.add("--verbose");   // the CLI requires it with stream-json
         // Removes Bash/PowerShell and the other code-running tools. Reading files still works.
         args.add("--restricted");
         if (cfg.model != null && !cfg.model.isBlank()) {
@@ -144,6 +163,7 @@ public final class ClaudeRunner {
             args.add("--session-id");
             args.add(sid);
         }
+
         // Hand over the live game as MCP tools, so Claude can read blocks and - in creative
         // with commands enabled - build directly instead of only proposing.
         boolean mcp = cfg.bridgeEnabled && Files.exists(Workspace.mcpConfigFile());
@@ -164,6 +184,7 @@ public final class ClaudeRunner {
         pb.directory(Workspace.root().toFile());
         pb.redirectErrorStream(false);
         Process proc = pb.start();
+        current = proc;
 
         try (Writer w = new OutputStreamWriter(proc.getOutputStream(), StandardCharsets.UTF_8)) {
             w.write(prompt);
@@ -176,15 +197,43 @@ public final class ClaudeRunner {
                 String line;
                 while ((line = br.readLine()) != null) err.append(line).append('\n');
             } catch (Exception ignored) {}
-        }, "claudecraft-stderr");
+        }, "claudemc-stderr");
         errReader.setDaemon(true);
         errReader.start();
 
-        StringBuilder out = new StringBuilder();
+        String reply = null;
+        boolean sawError = false;
+        StringBuilder raw = new StringBuilder();
+
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
-            while ((line = br.readLine()) != null) out.append(line).append('\n');
+            while ((line = br.readLine()) != null) {
+                if (line.isBlank()) continue;
+                raw.append(line).append('\n');
+                if (!streaming) continue;
+
+                JsonObject event;
+                try {
+                    event = JsonParser.parseString(line).getAsJsonObject();
+                } catch (Exception e) {
+                    continue;   // not every line is an event
+                }
+                String type = text(event, "type", "");
+                switch (type) {
+                    case "system" -> onProgress.accept("session ready");
+                    case "assistant" -> describeTurn(event, onProgress);
+                    case "result" -> {
+                        if (event.has("session_id") && !event.get("session_id").isJsonNull()) {
+                            sessionId = event.get("session_id").getAsString();
+                            persistSession();
+                        }
+                        sawError = event.has("is_error") && event.get("is_error").getAsBoolean();
+                        reply = text(event, "result", "");
+                    }
+                    default -> { }
+                }
+            }
         }
 
         boolean finished = proc.waitFor(Math.max(10, cfg.timeoutSeconds), TimeUnit.SECONDS);
@@ -193,33 +242,55 @@ public final class ClaudeRunner {
             throw new IllegalStateException("timed out after " + cfg.timeoutSeconds + "s");
         }
 
-        String stdout = out.toString().trim();
-        if (stdout.isEmpty()) {
-            String e = err.toString().trim();
-            throw new IllegalStateException(e.isEmpty()
-                    ? "claude produced no output (exit " + proc.exitValue() + ")"
-                    : trim(e, 300));
+        if (!streaming) {
+            String stdout = raw.toString().trim();
+            if (stdout.isEmpty()) throw failure(err, proc);
+            JsonObject envelope;
+            try {
+                envelope = JsonParser.parseString(stdout).getAsJsonObject();
+            } catch (Exception e) {
+                throw new IllegalStateException("could not parse claude output: " + trim(stdout, 300));
+            }
+            if (envelope.has("session_id") && !envelope.get("session_id").isJsonNull()) {
+                sessionId = envelope.get("session_id").getAsString();
+                persistSession();
+            }
+            sawError = envelope.has("is_error") && envelope.get("is_error").getAsBoolean();
+            reply = text(envelope, "result", "");
         }
 
-        JsonObject envelope;
-        try {
-            envelope = JsonParser.parseString(stdout).getAsJsonObject();
-        } catch (Exception e) {
-            throw new IllegalStateException("could not parse claude output: " + trim(stdout, 300));
-        }
+        if (reply == null) throw failure(err, proc);
+        if (sawError) throw new IllegalStateException(trim(reply.isBlank()
+                ? "claude reported an error" : reply, 300));
 
-        if (envelope.has("session_id") && !envelope.get("session_id").isJsonNull()) {
-            sessionId = envelope.get("session_id").getAsString();
-            persistSession();
-        }
-        if (envelope.has("is_error") && envelope.get("is_error").getAsBoolean()) {
-            throw new IllegalStateException(text(envelope, "result", "claude reported an error"));
-        }
-
-        String reply = text(envelope, "result", "");
         Proposal p = parse(reply);
         p.sessionId = sessionId == null ? "" : sessionId;
         return p;
+    }
+
+    /** Turns one assistant event into a one-line progress note. */
+    private static void describeTurn(JsonObject event, Consumer<String> onProgress) {
+        try {
+            JsonArray content = event.getAsJsonObject("message").getAsJsonArray("content");
+            for (JsonElement el : content) {
+                JsonObject block = el.getAsJsonObject();
+                String kind = text(block, "type", "");
+                if (kind.equals("tool_use")) {
+                    String name = text(block, "name", "tool");
+                    onProgress.accept("using " + name.replace("mcp__minecraft__", ""));
+                } else if (kind.equals("text")) {
+                    String t = text(block, "text", "").strip();
+                    if (!t.isEmpty()) onProgress.accept(trim(t.split("\n")[0], 50));
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static IllegalStateException failure(StringBuilder err, Process proc) {
+        String e = err.toString().trim();
+        return new IllegalStateException(e.isEmpty()
+                ? "claude produced no output (exit " + proc.exitValue() + ")"
+                : trim(e, 300));
     }
 
     /** Pulls the fenced json block out of Claude's reply; everything else becomes prose. */
@@ -270,7 +341,7 @@ public final class ClaudeRunner {
                 }
             }
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("could not parse command block", e);
+            ClaudeMCClient.LOG.warn("could not parse command block", e);
         }
         return p;
     }

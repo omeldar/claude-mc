@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * The folder every Claude Code session runs in: {@code <gameDir>/claudecraft/}.
+ * The folder every Claude Code session runs in: {@code <gameDir>/claudemc/}.
  *
  * <p>It holds a CLAUDE.md that Claude Code auto-discovers on session start, so every new
  * session knows it is talking to a live Minecraft client before it reads a single message.
@@ -17,7 +17,7 @@ public final class Workspace {
     private Workspace() {}
 
     public static Path root() {
-        return FabricLoader.getInstance().getGameDir().resolve("claudecraft");
+        return FabricLoader.getInstance().getGameDir().resolve("claudemc");
     }
 
     public static Path shots() { return root().resolve("shots"); }
@@ -39,7 +39,7 @@ public final class Workspace {
                 Files.writeString(notesFile(), NOTES_SEED, StandardCharsets.UTF_8);
             }
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("could not prepare workspace", e);
+            ClaudeMCClient.LOG.warn("could not prepare workspace", e);
         }
     }
 
@@ -47,7 +47,7 @@ public final class Workspace {
     private static final String CLAUDE_MD = """
 # You are connected to a live Minecraft client
 
-This session was started by the **ClaudeCraft** mod from inside a running Minecraft Java
+This session was started by the **ClaudeMC** mod from inside a running Minecraft Java
 Edition client. A player is standing in a world right now, reading your replies in chat and
 clicking buttons to run the commands you propose. You are not editing a codebase here.
 

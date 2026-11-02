@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -69,7 +69,7 @@ public final class WorldScan {
         }
 
         StringBuilder out = new StringBuilder();
-        out.append("ClaudeCraft world scan\n");
+        out.append("ClaudeMC world scan\n");
         out.append("centre: x=").append(feet.getX())
            .append(" y=").append(feet.getY())
            .append(" z=").append(feet.getZ()).append('\n');
@@ -103,7 +103,7 @@ public final class WorldScan {
             Files.writeString(p, out.toString(), StandardCharsets.UTF_8);
             return p;
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("could not write scan", e);
+            ClaudeMCClient.LOG.warn("could not write scan", e);
             return null;
         }
     }

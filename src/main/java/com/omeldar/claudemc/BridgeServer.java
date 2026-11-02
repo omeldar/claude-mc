@@ -1,9 +1,9 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.omeldar.claudecraft.ui.ApprovalScreen;
+import com.omeldar.claudemc.ui.ApprovalScreen;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.minecraft.client.MinecraftClient;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * started in a terminal yourself - can read the game's state and push proposals into the
  * approval menu, without the mod starting its own session.
  *
- * <p>Bound to 127.0.0.1 and guarded by a token written to {@code claudecraft/bridge.json}.
+ * <p>Bound to 127.0.0.1 and guarded by a token written to {@code claudemc/bridge.json}.
  */
 public final class BridgeServer {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -43,7 +43,7 @@ public final class BridgeServer {
             server.createContext("/propose", BridgeServer::handlePropose);
             server.createContext("/mcp", McpBridge::handle);
             server.setExecutor(Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r, "claudecraft-bridge");
+                Thread t = new Thread(r, "claudemc-bridge");
                 t.setDaemon(true);
                 return t;
             }));
@@ -53,13 +53,13 @@ public final class BridgeServer {
             JsonObject info = new JsonObject();
             info.addProperty("url", "http://127.0.0.1:" + cfg.bridgePort);
             info.addProperty("token", cfg.bridgeToken);
-            info.addProperty("header", "X-ClaudeCraft-Token");
+            info.addProperty("header", "X-ClaudeMC-Token");
             Files.writeString(Workspace.bridgeFile(), GSON.toJson(info), StandardCharsets.UTF_8);
 
             // The MCP server definition handed to every Claude Code session we start, so it can
             // look at the world directly instead of working from the snapshot alone.
             JsonObject headers = new JsonObject();
-            headers.addProperty("X-ClaudeCraft-Token", cfg.bridgeToken);
+            headers.addProperty("X-ClaudeMC-Token", cfg.bridgeToken);
             JsonObject minecraft = new JsonObject();
             minecraft.addProperty("type", "http");
             minecraft.addProperty("url", "http://127.0.0.1:" + cfg.bridgePort + "/mcp");
@@ -70,9 +70,9 @@ public final class BridgeServer {
             mcp.add("mcpServers", servers);
             Files.writeString(Workspace.mcpConfigFile(), GSON.toJson(mcp), StandardCharsets.UTF_8);
 
-            ClaudeCraftClient.LOG.info("bridge listening on 127.0.0.1:{} (http + mcp)", cfg.bridgePort);
+            ClaudeMCClient.LOG.info("bridge listening on 127.0.0.1:{} (http + mcp)", cfg.bridgePort);
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("bridge could not start on port {}", cfg.bridgePort, e);
+            ClaudeMCClient.LOG.warn("bridge could not start on port {}", cfg.bridgePort, e);
             server = null;
         }
     }
@@ -85,7 +85,7 @@ public final class BridgeServer {
     }
 
     private static boolean authorised(HttpExchange ex) {
-        String header = ex.getRequestHeaders().getFirst("X-ClaudeCraft-Token");
+        String header = ex.getRequestHeaders().getFirst("X-ClaudeMC-Token");
         if (header != null && header.equals(Config.get().bridgeToken)) return true;
         String query = ex.getRequestURI().getQuery();
         return query != null && query.contains("token=" + Config.get().bridgeToken);
@@ -94,7 +94,7 @@ public final class BridgeServer {
     private static void handlePing(HttpExchange ex) throws IOException {
         JsonObject o = new JsonObject();
         o.addProperty("ok", true);
-        o.addProperty("mod", "claudecraft");
+        o.addProperty("mod", "claudemc");
         MinecraftClient mc = MinecraftClient.getInstance();
         o.addProperty("inWorld", mc != null && mc.world != null);
         respond(ex, 200, GSON.toJson(o));

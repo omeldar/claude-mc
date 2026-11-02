@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.ClickEvent;
@@ -11,7 +11,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 /**
- * Everything ClaudeCraft prints. Messages are tagged with the mod's own glyph rather than a
+ * Everything ClaudeMC prints. Messages are tagged with the mod's own glyph rather than a
  * player head, and proposed commands are printed as clickable lines so they can be run without
  * opening the menu.
  */
@@ -19,7 +19,7 @@ public final class Chat {
     private Chat() {}
 
     /** Bitmap font supplying the Claude mark at U+E000. */
-    public static final Identifier ICON_FONT = Identifier.of("claudecraft", "icons");
+    public static final Identifier ICON_FONT = Identifier.of("claudemc", "icons");
     private static final String GLYPH = "";
 
     /** Claude clay, so the mark reads as itself rather than as chat gold. */

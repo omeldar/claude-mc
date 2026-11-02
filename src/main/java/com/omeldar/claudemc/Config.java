@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-/** User-editable settings, stored at config/claudecraft.json. */
+/** User-editable settings, stored at config/claudemc.json. */
 public final class Config {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Config instance;
@@ -17,7 +17,7 @@ public final class Config {
     /** Absolute path to the claude executable. Empty means auto-detect. */
     public String claudePath = "";
     /** Model alias passed to --model: sonnet, opus, fable, haiku, or a full model name. */
-    public String model = "sonnet";
+    public String model = "opus";
     /** Passed to --effort when non-empty: low, medium, high. */
     public String effort = "";
     /** How long to wait for a reply before giving up. */
@@ -33,6 +33,10 @@ public final class Config {
     public int defaultScanRadius = 24;
     /** Hard cap on how many commands one proposal may contain. */
     public int maxCommands = 24;
+    /** Read the reply as it streams, so progress shows instead of a frozen wait. */
+    public boolean streaming = true;
+    /** Echo each progress step into chat as well as the action bar. Noisy; off by default. */
+    public boolean showProgressInChat = false;
     /** Commands matching these prefixes are never run, whatever Claude proposes. */
     public String[] blockedPrefixes = {
         "/stop", "/op", "/deop", "/ban", "/ban-ip", "/kick", "/whitelist", "/pardon", "/save-off"
@@ -48,7 +52,7 @@ public final class Config {
     }
 
     private static Path path() {
-        return FabricLoader.getInstance().getConfigDir().resolve("claudecraft.json");
+        return FabricLoader.getInstance().getConfigDir().resolve("claudemc.json");
     }
 
     private static Config load() {
@@ -60,7 +64,7 @@ public final class Config {
                 if (read != null) c = read;
             }
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("could not read config, using defaults", e);
+            ClaudeMCClient.LOG.warn("could not read config, using defaults", e);
         }
         if (c.bridgeToken == null || c.bridgeToken.isBlank()) {
             c.bridgeToken = UUID.randomUUID().toString();
@@ -78,7 +82,7 @@ public final class Config {
             Files.createDirectories(p.getParent());
             Files.writeString(p, GSON.toJson(this), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("could not write config", e);
+            ClaudeMCClient.LOG.warn("could not write config", e);
         }
     }
 

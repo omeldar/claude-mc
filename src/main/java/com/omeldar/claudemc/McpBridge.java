@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -91,14 +91,14 @@ public final class McpBridge {
                 respond(ex, 200, GSON.toJson(envelope));
             }
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("mcp call failed", e);
+            ClaudeMCClient.LOG.warn("mcp call failed", e);
             respond(ex, 200, error(id, -32603,
                     e.getMessage() == null ? e.toString() : e.getMessage()));
         }
     }
 
     private static boolean authorised(HttpExchange ex) {
-        String header = ex.getRequestHeaders().getFirst("X-ClaudeCraft-Token");
+        String header = ex.getRequestHeaders().getFirst("X-ClaudeMC-Token");
         return header != null && header.equals(Config.get().bridgeToken);
     }
 
@@ -138,7 +138,7 @@ public final class McpBridge {
         caps.add("tools", tools);
 
         JsonObject info = new JsonObject();
-        info.addProperty("name", "claudecraft");
+        info.addProperty("name", "claudemc");
         info.addProperty("version", "0.1.0");
 
         JsonObject result = new JsonObject();

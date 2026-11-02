@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -135,7 +135,7 @@ public final class ContextSnapshot {
             Workspace.ensure();
             Files.writeString(Workspace.contextFile(), GSON.toJson(capture(mc)), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.warn("could not write context.json", e);
+            ClaudeMCClient.LOG.warn("could not write context.json", e);
         }
     }
 

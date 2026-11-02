@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="src/main/resources/assets/claudecraft/icon.png" width="96" alt="ClaudeCraft">
+<img src="src/main/resources/assets/claudemc/icon.png" width="96" alt="ClaudeMC">
 
-# ClaudeCraft
+# ClaudeMC
 
 **Claude Code, inside Minecraft.**
 
@@ -20,7 +20,7 @@ Click the commands you want to run.
 
 ## What it is
 
-ClaudeCraft runs the **Claude Code CLI you already have installed** and pipes it into the game.
+ClaudeMC runs the **Claude Code CLI you already have installed** and pipes it into the game.
 There is no API key, no account to connect and no per-prompt billing on top of what Claude Code
 already costs you — the mod simply drives `claude` as a subprocess and keeps the session alive
 between prompts, so it remembers your build.
@@ -52,6 +52,8 @@ Nothing runs until you click.
 | **Chat-native** | `/claude <prompt>` or `/ai <prompt>`. Replies are tagged with the Claude mark via a bitmap font, so they never look like another player talking. |
 | **Click to run** | Every proposed command is a clickable `[Run]` in chat, with `[Copy]` beside it and a full approval menu one click away. |
 | **Sessions that remember** | The conversation persists across prompts *and across game restarts*. `/claude new` starts fresh. |
+| **Live progress** | Replies stream, so you see each step — *"using scan_area"*, *"checking the floor"* — above the hotbar instead of a frozen wait. |
+| **Editable commands** | Every command in the approval menu is a text field. Nudge a radius or swap a block before you run it. |
 | **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
 | **Build memory** | Claude keeps `notes.md` in its workspace: coordinates, palettes, what each room is for. It survives sessions. |
@@ -68,7 +70,7 @@ This is the part worth reading twice.
   something you couldn't have typed yourself.
 - **Nothing runs unprompted.** Commands are queued only when you click.
 - **Permission is checked before Claude is even asked.** The mod reads the command tree the
-  server sent you. A survival world without cheats gets a minimal tree, so ClaudeCraft knows it
+  server sent you. A survival world without cheats gets a minimal tree, so ClaudeMC knows it
   is read-only, tells Claude *not to propose commands*, and answers with advice instead.
 - **Singleplayer survival still works** — pause → **Open to LAN** → *Allow Cheats: ON* →
   **Start LAN World**, and commands become available exactly as they would for you.
@@ -81,7 +83,7 @@ This is the part worth reading twice.
 1. Install [Claude Code](https://claude.com/claude-code) and sign in — `claude --version` must work.
 2. Install [Fabric Loader](https://fabricmc.net/use/) for **1.21.11** and
    [Fabric API](https://modrinth.com/mod/fabric-api).
-3. Drop `claudecraft-*.jar` from [Releases](../../releases) into your `mods/` folder.
+3. Drop `claudemc-*.jar` from [Releases](../../releases) into your `mods/` folder.
 4. Launch, join a world, and type `/claude hello`.
 
 WorldEdit is optional but strongly recommended — most useful answers are WorldEdit commands.
@@ -94,6 +96,10 @@ WorldEdit is optional but strongly recommended — most useful answers are World
 | `/claude new <prompt>` | Start a fresh session |
 | `/claude shot <prompt>` | Attach your newest screenshot (press <kbd>F2</kbd> first) |
 | `/claude scan <r> <prompt>` | Attach a block scan of radius `r` (1–64) |
+| `/claude shot scan <r> <prompt>` | Attach **both** — either order works |
+| `/claude model <name>` | `opus`, `sonnet`, `haiku`, `fable`, or a full model id |
+| `/claude effort <level>` | `low`, `medium`, `high`, `default` |
+| `/claude open` | The prompt screen, with attachment toggles |
 | `/claude last` | Reopen the approval menu |
 | `/claude undo` | Queue `//undo` |
 | `/claude cancel` | Drop anything still queued |
@@ -103,14 +109,15 @@ WorldEdit is optional but strongly recommended — most useful answers are World
 
 ## Configuration
 
-`config/claudecraft.json`, created on first launch:
+`config/claudemc.json`, created on first launch:
 
 ```jsonc
 {
   "claudePath": "",            // empty = auto-detect
-  "model": "sonnet",           // sonnet | opus | fable | haiku | full model name
+  "model": "opus",             // opus | sonnet | haiku | fable | full model name
   "effort": "",                // low | medium | high
   "timeoutSeconds": 240,
+  "streaming": true,           // show progress as the reply arrives
   "commandDelayTicks": 5,      // gap between queued commands
   "bridgeEnabled": true,
   "bridgePort": 25599,
@@ -128,7 +135,7 @@ WorldEdit is optional but strongly recommended — most useful answers are World
         │  /claude <prompt>
         ▼
   ┌──────────────┐   writes    ┌──────────────────────────┐
-  │  ClaudeCraft │ ──────────► │  <gameDir>/claudecraft/  │
+  │  ClaudeMC │ ──────────► │  <gameDir>/claudemc/  │
   │     mod      │             │   CLAUDE.md              │
   └──────┬───────┘             │   context.json           │
          │ spawns              │   notes.md               │
@@ -148,11 +155,11 @@ knows it is driving a Minecraft client before it reads your first word.
 
 A loopback-only HTTP server (default `127.0.0.1:25599`) lets an **already running** Claude Code
 session — one you started in a terminal yourself — read the game state and push proposals into
-the approval menu. The token lives in `claudecraft/bridge.json`.
+the approval menu. The token lives in `claudemc/bridge.json`.
 
 ```bash
-curl -s -H "X-ClaudeCraft-Token: $TOKEN" http://127.0.0.1:25599/context
-curl -s -X POST -H "X-ClaudeCraft-Token: $TOKEN" \
+curl -s -H "X-ClaudeMC-Token: $TOKEN" http://127.0.0.1:25599/context
+curl -s -X POST -H "X-ClaudeMC-Token: $TOKEN" \
   -d '{"summary":"test","commands":[{"cmd":"//limit -1","note":"lift the cap"}]}' \
   http://127.0.0.1:25599/propose
 ```
@@ -187,11 +194,25 @@ still filtered by the deny list, still spaced out by the queue, and still stoppa
 `/claude cancel`. The refusal tells Claude *why*, so it falls back to proposing commands for
 you to approve instead of retrying.
 
+## Keybinds
+
+Rebindable in **Options → Controls → ClaudeMC**:
+
+| Default | Action |
+|---|---|
+| <kbd>C</kbd> | Open the prompt screen |
+| <kbd>V</kbd> | Reopen the last proposal |
+| *unbound* | Undo last WorldEdit |
+
+The prompt screen is the comfortable way in: a text box, independent **Screenshot** and
+**Scan** toggles that combine freely, a session keep/new switch, and model + effort cyclers.
+Your choices stick between opens, and an unsent draft survives closing the screen.
+
 ## Roadmap
 
-- [ ] Configurable keybind to reopen the last proposal
-- [ ] Inline editing of a command before running it
-- [ ] Streaming replies instead of waiting for the full answer
+- [ ] Per-world notes instead of one shared `notes.md`
+- [ ] Render the proposal as a HUD list without opening a screen
+- [ ] Litematica schematic generation from a description
 
 ## License
 

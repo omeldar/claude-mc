@@ -1,10 +1,10 @@
-"""Generates ClaudeCraft's bitmap assets with nothing but the Python standard library.
+"""Generates ClaudeMC's bitmap assets with nothing but the Python standard library.
 
     python tools/make_icons.py
 
 Writes:
-  src/main/resources/assets/claudecraft/textures/font/claude_mark.png  (16x16 chat glyph)
-  src/main/resources/assets/claudecraft/icon.png                       (128x128 mod icon)
+  src/main/resources/assets/claudemc/textures/font/claude_mark.png  (16x16 chat glyph)
+  src/main/resources/assets/claudemc/icon.png                       (128x128 mod icon)
 
 The glyph is drawn white so Minecraft can tint it; the mod icon is drawn in Claude clay.
 """
@@ -84,7 +84,7 @@ def write_png(path, px):
 
 def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-    assets = os.path.join(root, "src", "main", "resources", "assets", "claudecraft")
+    assets = os.path.join(root, "src", "main", "resources", "assets", "claudemc")
     # White so the chat colour can tint it.
     write_png(os.path.join(assets, "textures", "font", "claude_mark.png"),
               burst(16, (255, 255, 255)))

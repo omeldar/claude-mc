@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;

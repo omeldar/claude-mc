@@ -1,4 +1,4 @@
-package com.omeldar.claudecraft;
+package com.omeldar.claudemc;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.tree.CommandNode;
@@ -7,7 +7,7 @@ import net.minecraft.client.MinecraftClient;
 /**
  * Decides whether this client is actually allowed to run commands.
  *
- * <p>ClaudeCraft never runs anything the player could not have typed themselves: every command
+ * <p>ClaudeMC never runs anything the player could not have typed themselves: every command
  * goes out as a normal chat command under the player's own name and the server applies its own
  * rules. This class exists so we fail loudly and early instead of spamming a survival server
  * with commands it will silently reject - and so Claude is told up front not to propose any.
@@ -57,7 +57,7 @@ public final class CommandPermissions {
                 if (root.getChild(probe) != null) return true;
             }
         } catch (Exception e) {
-            ClaudeCraftClient.LOG.debug("could not inspect command tree", e);
+            ClaudeMCClient.LOG.debug("could not inspect command tree", e);
         }
         return false;
     }
