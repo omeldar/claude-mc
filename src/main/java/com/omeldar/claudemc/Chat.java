@@ -21,6 +21,9 @@ public final class Chat {
     /** Bitmap font supplying the Claude mark at U+E000. */
     public static final Identifier ICON_FONT = Identifier.of("claudemc", "icons");
     private static final String GLYPH = "";
+    private static final String WARN_GLYPH = "";
+    /** Amber, so it reads as a caution rather than an error. */
+    private static final int AMBER = 0xE6A03C;
 
     /** Claude clay, so the mark reads as itself rather than as chat gold. */
     private static final int CLAY = 0xD97757;
@@ -30,8 +33,17 @@ public final class Chat {
                 .styled(s -> s.withFont(new StyleSpriteSource.Font(ICON_FONT)).withColor(TextColor.fromRgb(CLAY)));
     }
 
+    /** The warning triangle, shown whenever a reply was billed to an API key. */
+    public static MutableText warnBadge() {
+        return Text.literal(WARN_GLYPH)
+                .styled(s -> s.withFont(new StyleSpriteSource.Font(ICON_FONT))
+                        .withColor(TextColor.fromRgb(AMBER)));
+    }
+
     private static MutableText prefix() {
-        return Text.empty().append(badge()).append(Text.literal(" "));
+        MutableText t = Text.empty().append(badge());
+        if (ClaudeRunner.billedToKey()) t.append(Text.literal(" ")).append(warnBadge());
+        return t.append(Text.literal(" "));
     }
 
     private static void send(Text body) {
@@ -64,9 +76,10 @@ public final class Chat {
         MinecraftClient mc = MinecraftClient.getInstance();
         mc.execute(() -> {
             if (mc.player != null) {
+                MutableText line = Text.empty().append(badge());
+                if (ClaudeRunner.billedToKey()) line.append(Text.literal(" ")).append(warnBadge());
                 mc.player.sendMessage(
-                        Text.empty().append(badge()).append(Text.literal(" " + body)
-                                .formatted(Formatting.GRAY)), true);
+                        line.append(Text.literal(" " + body).formatted(Formatting.GRAY)), true);
             }
         });
     }

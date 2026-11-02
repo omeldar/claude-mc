@@ -317,6 +317,17 @@ public class ClaudeMCClient implements ClientModInitializer {
         Chat.dim("queue        " + CommandQueue.pending() + " pending");
         Chat.dim("bridge       " + (cfg.bridgeEnabled ? "127.0.0.1:" + cfg.bridgePort : "off"));
         Chat.dim("workspace    " + Workspace.root());
+        if (ClaudeRunner.billedToKey()) {
+            Chat.info(Text.empty().append(Chat.warnBadge())
+                    .append(Text.literal(" billing      API KEY (" + ClaudeRunner.apiKeySource()
+                            + ") - prompts are charged per token").formatted(Formatting.RED)));
+        } else if (cfg.allowApiKey) {
+            Chat.dim("billing      API key allowed, but none used yet");
+        } else if (ClaudeRunner.keyPresentInEnvironment()) {
+            Chat.dim("billing      subscription (an API key is set but is being ignored)");
+        } else {
+            Chat.dim("billing      subscription");
+        }
         if (Usage.hasLimits()) Chat.dim("quota        " + Usage.compact());
         if (CommandPermissions.allowed(mc)) {
             Chat.info(Text.literal("commands     allowed (" + CommandPermissions.authority(mc) + ")")
@@ -431,8 +442,22 @@ public class ClaudeMCClient implements ClientModInitializer {
             });
     }
 
+    /** Said once per game session, so the player knows their key is deliberately ignored. */
+    private static boolean toldAboutIgnoredKey = false;
+
     private static void deliver(MinecraftClient mc, Proposal proposal) {
         lastProposal = proposal;
+
+        if (ClaudeRunner.billedToKey()) {
+            Chat.info(Text.empty().append(Chat.warnBadge())
+                    .append(Text.literal(" that reply ran on an API key and was billed ("
+                            + ClaudeRunner.apiKeySource() + "). Turn it off in /claude settings.")
+                            .formatted(Formatting.RED)));
+        } else if (ClaudeRunner.keyStripped() && !toldAboutIgnoredKey) {
+            toldAboutIgnoredKey = true;
+            Chat.dim("an API key is set in your environment; it was ignored and your "
+                   + "subscription was used. Enable it in /claude settings if you want billing.");
+        }
 
         if (proposal.prose != null && !proposal.prose.isBlank()) {
             for (String line : proposal.prose.split("\n")) {

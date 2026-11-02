@@ -65,6 +65,16 @@ public final class Config {
     public boolean showProgressInChat = false;
     /** How many characters the chat box accepts while the line starts with /claude or /ai. */
     public int chatPromptLimit = 2000;
+    /**
+     * Allow prompts to run on an API key, which is <em>billed per token</em>.
+     *
+     * <p>Off by default, and off means enforced, not merely discouraged: the key variables are
+     * removed from the environment handed to the CLI, so it falls back to the subscription
+     * login. The CLI prefers ANTHROPIC_API_KEY over an OAuth profile, so without this the mod
+     * could silently start charging a card because of a variable set for something else
+     * entirely. Turn it on only if billed API usage is what you actually want.
+     */
+    public boolean allowApiKey = false;
     /** Commands matching these prefixes are never run, whatever Claude proposes. */
     public String[] blockedPrefixes = {
         "/stop", "/op", "/deop", "/ban", "/ban-ip", "/kick", "/whitelist", "/pardon", "/save-off"

@@ -75,6 +75,13 @@ public class SettingsScreen extends Screen {
                 () -> "World tools: " + (cfg.bridgeEnabled ? "on" : "off"),
                 () -> { cfg.bridgeEnabled = !cfg.bridgeEnabled; }));
 
+        y += 24;
+        addDrawableChild(cycler(left, y, w,
+                () -> cfg.allowApiKey
+                        ? "API key billing: ALLOWED - prompts are charged per token"
+                        : "API key billing: blocked (recommended)",
+                () -> { cfg.allowApiKey = !cfg.allowApiKey; }));
+
         y += 30;
         modelLabelY = y + 5;
         modelField = new TextFieldWidget(this.textRenderer, left + 150, y, w - 150, 18,

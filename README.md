@@ -56,6 +56,7 @@ Nothing runs until you click.
 | **Editable commands** | Every command in the approval menu is a text field. Nudge a radius or swap a block before you run it. |
 | **Room to type** | The prompt screen is a multi-line box (8000 chars), and the mod lifts vanilla's 256-character chat cap while the line starts with `/claude` or `/ai`. |
 | **Any model** | A picker listing every verified id — four Opus versions, three Sonnet, two Haiku, two Fable, plus the aliases. Type any other id and it's remembered. |
+| **Subscription-safe** | API key billing is off by default and *enforced* — key variables are stripped from the CLI's environment, so a stray `ANTHROPIC_API_KEY` can't quietly start charging you. Opt in explicitly, and every billed reply is flagged with a warning glyph. |
 | **Usage in game** | `/claude usage` shows your quota windows as bars with reset times, plus what this game session has spent. It also nudges you once when a window passes 80%. |
 | **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
@@ -64,6 +65,20 @@ Nothing runs until you click.
 | **Sparse scans** | Scans go out to a 256-block radius because air is never written. Each layer is run-length spans of non-air blocks with exact coordinates; anything absent is air. |
 | **Direct world access** | Claude gets real MCP tools into the running client: read any block, scan a region, find where a block type occurs — and, in creative with cheats on, build straight from your description. |
 | **Safe by construction** | On survival worlds and servers without permission it is told *not to propose commands at all*, and refuses to run them if it does. |
+
+## Billing: subscription only, unless you say otherwise
+
+ClaudeMC drives your installed `claude`, so it bills however that CLI is authenticated. The
+CLI's credential order puts `ANTHROPIC_API_KEY` **above** your claude.ai login — so a key set
+for something else entirely would silently turn every prompt into a per-token charge.
+
+So the mod doesn't leave it to chance. **API key billing is off by default, and off means
+enforced:** the key variables are removed from the environment handed to the CLI, which falls
+back to your subscription. If a key was present and ignored, it says so once.
+
+Turn it on in `/claude settings` → **API key billing** only if billed API usage is what you
+want. While it's on, every reply, the action bar and `/claude status` carry a ⚠ glyph naming
+the credential that was charged.
 
 ## Safety model
 

@@ -36,6 +36,15 @@ public final class ClaudeRunner {
     private static volatile String sessionId = null;
     /** What the CLI actually resolved --model to, e.g. "opus" -> "claude-opus-5-5". */
     private static volatile String resolvedModel = "";
+    /** What the CLI said it authenticated with: "none" means the subscription login. */
+    private static volatile String apiKeySource = "none";
+    /** True when the last reply was authenticated with an API key, so it was billed. */
+    private static volatile boolean billedToKey = false;
+    /** True when a key was found in the environment and removed before launching. */
+    private static volatile boolean keyStripped = false;
+
+    /** Environment variables the CLI treats as billed credentials, in its own order. */
+    private static final String[] KEY_ENV = {"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"};
     private static volatile boolean busy = false;
     private static volatile Process current = null;
 
@@ -46,6 +55,21 @@ public final class ClaudeRunner {
     public static String sessionId() { return sessionId; }
 
     public static String resolvedModel() { return resolvedModel; }
+
+    public static String apiKeySource() { return apiKeySource; }
+
+    public static boolean billedToKey() { return billedToKey; }
+
+    public static boolean keyStripped() { return keyStripped; }
+
+    /** True if a billed credential is sitting in the environment, whether or not it is allowed. */
+    public static boolean keyPresentInEnvironment() {
+        for (String k : KEY_ENV) {
+            String v = System.getenv(k);
+            if (v != null && !v.isBlank()) return true;
+        }
+        return false;
+    }
 
     public static void newSession() {
         sessionId = null;
@@ -194,6 +218,18 @@ public final class ClaudeRunner {
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.directory(Workspace.root().toFile());
         pb.redirectErrorStream(false);
+
+        // The child inherits this process's environment, and the CLI prefers ANTHROPIC_API_KEY
+        // over the subscription login. Unless the player has explicitly opted in, take the key
+        // out of the child's environment so a billed run is not possible by accident.
+        keyStripped = false;
+        if (!cfg.allowApiKey) {
+            for (String k : KEY_ENV) {
+                if (pb.environment().remove(k) != null) keyStripped = true;
+            }
+            billedToKey = false;
+            apiKeySource = "none";
+        }
         Process proc = pb.start();
         current = proc;
 
@@ -235,6 +271,11 @@ public final class ClaudeRunner {
                     case "system" -> {
                         String m = text(event, "model", "");
                         if (!m.isBlank()) resolvedModel = m;
+                        String src = text(event, "apiKeySource", "none");
+                        if (!src.isBlank()) {
+                            apiKeySource = src;
+                            billedToKey = !"none".equalsIgnoreCase(src);
+                        }
                         onProgress.accept("session ready");
                     }
                     case "rate_limit_event" -> {
