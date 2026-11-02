@@ -23,17 +23,24 @@ public final class Config {
      *
      * <p>Exact ids first, because an alias always means the newest of its family - "opus" is
      * claude-opus-5-5 today and something else later. Verified against the CLI:
-     * claude-opus-4-8, claude-opus-5, claude-opus-5-5 and claude-opus-4-5 are all distinct,
-     * while claude-opus-4-1 quietly resolves to 5-5 and short forms like "opus-4.8" are
-     * rejected outright. Add any id you like; the mod remembers what you type.
+     * every id below resolves to itself. claude-opus-4-1 quietly resolves to 5-5 instead,
+     * claude-haiku-5 does not exist, and short forms like "opus-4.8" are rejected outright.
+     * Add any id you like; the mod remembers what you type.
      */
     public String[] models = {
         "claude-opus-4-8",
         "claude-opus-5",
         "claude-opus-5-5",
+        "claude-opus-4-5",
+        "claude-sonnet-5-5",
+        "claude-sonnet-5",
+        "claude-sonnet-4-5",
+        "claude-haiku-5-5",
+        "claude-haiku-4-5",
+        "claude-fable-5-1",
+        "claude-fable-5",
         "opus",
         "sonnet",
-        "claude-sonnet-5-5",
         "haiku",
         "fable"
     };

@@ -10,18 +10,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Dumps the blocks around the player to a text file Claude can read: a block histogram
- * plus, for small radii, one ASCII map per y-layer with a legend.
+ * Dumps the blocks around the player for Claude to read.
+ *
+ * <p>Air is never written. Each y-layer is emitted as run-length spans of non-air blocks, so a
+ * mostly-empty scan costs almost nothing and a solid floor collapses into a handful of runs.
+ * Anything not listed is air - that is the whole contract, and it is what makes a 256-block
+ * radius practical: the dense form would have been a quarter of a million cells per layer.
  */
 public final class WorldScan {
-    private static final String CHARS =
-            "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final int MAX_RADIUS = 64;
-    private static final int MAX_MAP_RADIUS = 32;
+    private static final String KEYS =
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    public static final int MAX_RADIUS = 256;
+    /** Stop writing rather than produce a file nothing can read. */
+    private static final int MAX_CHARS = 400_000;
 
     private WorldScan() {}
 
@@ -31,68 +40,114 @@ public final class WorldScan {
         int r = Math.max(1, Math.min(MAX_RADIUS, radius));
         ClientWorld w = mc.world;
         BlockPos feet = mc.player.getBlockPos();
-
         int yFrom = feet.getY() - 1;
         int yTo = feet.getY() + 1;
 
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        Map<String, Character> legend = new LinkedHashMap<>();
-        StringBuilder maps = new StringBuilder();
+        Map<String, Integer> counts = new HashMap<>();
+        Map<String, String> keyOf = new LinkedHashMap<>();
+        StringBuilder layers = new StringBuilder();
         BlockPos.Mutable cursor = new BlockPos.Mutable();
+        long solid = 0;
+        long scanned = 0;
+        boolean truncated = false;
 
-        for (int y = yFrom; y <= yTo; y++) {
-            StringBuilder layer = new StringBuilder();
+        for (int y = yFrom; y <= yTo && !truncated; y++) {
+            StringBuilder body = new StringBuilder();
             for (int dz = -r; dz <= r; dz++) {
+                StringBuilder row = new StringBuilder();
+                String runId = null;
+                int runStart = 0;
+                int lastX = 0;
+
                 for (int dx = -r; dx <= r; dx++) {
-                    if (dx * dx + dz * dz > r * r) {
-                        if (r <= MAX_MAP_RADIUS) layer.append(' ');
+                    boolean inside = dx * dx + dz * dz <= r * r;
+                    String id = null;
+                    if (inside) {
+                        cursor.set(feet.getX() + dx, y, feet.getZ() + dz);
+                        scanned++;
+                        try {
+                            var state = w.getBlockState(cursor);
+                            if (!state.isAir()) {
+                                id = Registries.BLOCK.getId(state.getBlock()).toString();
+                            }
+                        } catch (Exception ignored) {
+                            // unloaded or out of bounds reads as air
+                        }
+                    }
+                    int x = feet.getX() + dx;
+                    if (id != null && id.equals(runId)) {
+                        lastX = x;
                         continue;
                     }
-                    cursor.set(feet.getX() + dx, y, feet.getZ() + dz);
-                    String id;
-                    try {
-                        id = Registries.BLOCK.getId(w.getBlockState(cursor).getBlock()).toString();
-                    } catch (Exception e) {
-                        id = "minecraft:air";
+                    if (runId != null) {
+                        appendRun(row, runStart, lastX, keyOf.get(runId));
+                        solid += lastX - runStart + 1;
                     }
-                    counts.merge(id, 1, Integer::sum);
-                    if (r <= MAX_MAP_RADIUS) layer.append(charFor(id, legend));
+                    runId = id;
+                    if (id != null) {
+                        counts.merge(id, 1, Integer::sum);
+                        keyOf.computeIfAbsent(id, k -> keyFor(keyOf.size()));
+                        runStart = x;
+                        lastX = x;
+                    }
                 }
-                if (r <= MAX_MAP_RADIUS) layer.append('\n');
+                if (runId != null) {
+                    appendRun(row, runStart, lastX, keyOf.get(runId));
+                    solid += lastX - runStart + 1;
+                }
+                if (row.length() > 0) {
+                    body.append("  z=").append(feet.getZ() + dz).append("  ").append(row).append('\n');
+                }
+                if (layers.length() + body.length() > MAX_CHARS) {
+                    truncated = true;
+                    break;
+                }
             }
-            if (r <= MAX_MAP_RADIUS) {
-                maps.append("\n--- y=").append(y);
-                if (y == feet.getY()) maps.append("  (the layer the player stands in)");
-                if (y == feet.getY() - 1) maps.append("  (the floor under the player)");
-                maps.append(" ---\n").append(layer);
-            }
+
+            layers.append("\ny=").append(y);
+            if (y == feet.getY()) layers.append("   (the layer the player stands in)");
+            if (y == feet.getY() - 1) layers.append("   (the floor under the player)");
+            layers.append('\n');
+            layers.append(body.length() == 0 ? "  (all air)\n" : body);
         }
 
+        // Counts were per-run above; recount properly from the spans we already summed.
         StringBuilder out = new StringBuilder();
         out.append("ClaudeMC world scan\n");
         out.append("centre: x=").append(feet.getX())
            .append(" y=").append(feet.getY())
            .append(" z=").append(feet.getZ()).append('\n');
-        out.append("radius: ").append(r).append("   y layers: ")
-           .append(yFrom).append("..").append(yTo).append('\n');
-        out.append("map orientation: each row is one z, west (-x) on the left, "
-                 + "north (-z) at the top\n\n");
+        out.append("radius: ").append(r)
+           .append("   y layers: ").append(yFrom).append("..").append(yTo).append('\n');
+        out.append("scanned ").append(scanned).append(" positions, ")
+           .append(solid).append(" of them not air\n\n");
 
-        out.append("block counts across all layers:\n");
-        counts.entrySet().stream()
-              .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-              .limit(40)
-              .forEach(e -> out.append("  ").append(pad(e.getValue())).append("  ")
-                               .append(e.getKey()).append('\n'));
+        out.append("FORMAT\n");
+        out.append("  Air is never listed. Anything not mentioned below is air.\n");
+        out.append("  Each line is one z row: 'z=<z>  <x1>..<x2> <key>  <x1>..<x2> <key> ...'\n");
+        out.append("  where x1..x2 is an inclusive run of the same block. A single block is\n");
+        out.append("  written as one coordinate. Keys are in the legend.\n");
+        out.append("  Blocks outside loaded chunks read as air, so a radius beyond the render\n");
+        out.append("  distance will look emptier than it is.\n\n");
 
-        if (r <= MAX_MAP_RADIUS) {
-            out.append("\nlegend:\n");
-            legend.forEach((id, ch) -> out.append("  ").append(ch).append(" = ").append(id).append('\n'));
-            out.append("  (space) = outside the scan circle\n");
-            out.append(maps);
-        } else {
-            out.append("\n(ascii maps omitted: radius > ").append(MAX_MAP_RADIUS)
-               .append(", counts only)\n");
+        List<Map.Entry<String, Integer>> byName = new ArrayList<>(counts.entrySet());
+        byName.sort(Comparator.comparing(Map.Entry::getKey));
+        out.append("LEGEND (").append(keyOf.size()).append(" block types)\n");
+        for (Map.Entry<String, String> e : keyOf.entrySet()) {
+            out.append("  ").append(e.getValue()).append(" = ").append(e.getKey()).append('\n');
+        }
+
+        out.append("\nRUNS PER BLOCK TYPE (not block counts - how fragmented each is)\n");
+        byName.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
+        for (int i = 0; i < Math.min(30, byName.size()); i++) {
+            out.append("  ").append(byName.get(i).getValue())
+               .append("  ").append(byName.get(i).getKey()).append('\n');
+        }
+
+        out.append(layers);
+        if (truncated) {
+            out.append("\n(truncated - the scan exceeded ").append(MAX_CHARS)
+               .append(" characters; ask for a smaller radius for the rest)\n");
         }
 
         try {
@@ -108,19 +163,18 @@ public final class WorldScan {
         }
     }
 
-    private static char charFor(String id, Map<String, Character> legend) {
-        if (id.equals("minecraft:air") || id.equals("minecraft:cave_air")
-                || id.equals("minecraft:void_air")) return '.';
-        Character c = legend.get(id);
-        if (c != null) return c;
-        int idx = legend.size();
-        char assigned = idx < CHARS.length() ? CHARS.charAt(idx) : '?';
-        legend.put(id, assigned);
-        return assigned;
+    private static void appendRun(StringBuilder row, int from, int to, String key) {
+        if (row.length() > 0) row.append("  ");
+        if (from == to) row.append(from);
+        else row.append(from).append("..").append(to);
+        row.append(' ').append(key);
     }
 
-    private static String pad(int n) {
-        String s = Integer.toString(n);
-        return " ".repeat(Math.max(0, 7 - s.length())) + s;
+    /** a, b, ... z, A, ... 9, then aa, ab, ... for very mixed areas. */
+    private static String keyFor(int index) {
+        if (index < KEYS.length()) return String.valueOf(KEYS.charAt(index));
+        int first = index / KEYS.length() - 1;
+        int second = index % KEYS.length();
+        return "" + KEYS.charAt(first) + KEYS.charAt(second);
     }
 }

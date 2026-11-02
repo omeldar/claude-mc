@@ -24,7 +24,7 @@ import org.lwjgl.glfw.GLFW;
  */
 public class PromptScreen extends Screen {
     private static final String[] EFFORTS = {"", "low", "medium", "high"};
-    private static final int[] RADII = {0, 8, 16, 24, 32, 48, 64};
+    private static final int[] RADII = {0, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256};
     private static final int BOX_HEIGHT = 88;
 
     // Remembered across opens.
@@ -80,12 +80,9 @@ public class PromptScreen extends Screen {
         y += 24;
         int half = (w - 4) / 2;
 
-        addDrawableChild(ButtonWidget.builder(modelLabel(), b -> {
-            Config cfg = Config.get();
-            cfg.model = next(cfg.models, cfg.model);
-            cfg.save();
-            b.setMessage(modelLabel());
-        }).dimensions(left, y, half, 20).build());
+        addDrawableChild(ButtonWidget.builder(modelLabel(),
+                b -> MinecraftClient.getInstance().setScreen(new ModelPickerScreen(this)))
+                .dimensions(left, y, half, 20).build());
 
         addDrawableChild(ButtonWidget.builder(effortLabel(), b -> {
             Config cfg = Config.get();

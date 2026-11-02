@@ -178,12 +178,14 @@ public final class McpBridge {
               + "\"required\":[\"x\",\"y\",\"z\"]}"));
 
         tools.add(tool("scan_area",
-                "Scan a cylinder around the player and return a block histogram plus, for radii "
-              + "up to 32, an ASCII map per y-layer with a legend. Use this to see what is "
-              + "actually built rather than guessing.",
+                "Scan a cylinder around the player, three y-layers deep, and return every "
+              + "non-air block as run-length spans with exact coordinates. Air is never "
+              + "listed - anything absent is air - so even a 256 radius stays readable. Use "
+              + "this to see what is actually built rather than guessing.",
                 "{\"type\":\"object\",\"properties\":{"
-              + "\"radius\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":64,"
-              + "\"description\":\"horizontal radius in blocks\"}},\"required\":[\"radius\"]}"));
+              + "\"radius\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":256,"
+              + "\"description\":\"horizontal radius in blocks; large values are fine, the "
+              + "output is sparse\"}},\"required\":[\"radius\"]}"));
 
         tools.add(tool("find_blocks",
                 "Find where a given block type occurs near the player. Returns up to 128 "

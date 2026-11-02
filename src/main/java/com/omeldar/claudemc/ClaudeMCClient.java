@@ -75,7 +75,7 @@ public class ClaudeMCClient implements ClientModInitializer {
             // Attachments, in either order, so a screenshot and a scan can go together.
             .then(ClientCommandManager.literal("shot")
                 .then(ClientCommandManager.literal("scan")
-                    .then(ClientCommandManager.argument("radius", IntegerArgumentType.integer(1, 64))
+                    .then(ClientCommandManager.argument("radius", IntegerArgumentType.integer(1, WorldScan.MAX_RADIUS))
                         .then(ClientCommandManager.argument("prompt", StringArgumentType.greedyString())
                             .executes(c -> {
                                 ask(StringArgumentType.getString(c, "prompt"), false, true,
@@ -89,7 +89,7 @@ public class ClaudeMCClient implements ClientModInitializer {
                     })))
 
             .then(ClientCommandManager.literal("scan")
-                .then(ClientCommandManager.argument("radius", IntegerArgumentType.integer(1, 64))
+                .then(ClientCommandManager.argument("radius", IntegerArgumentType.integer(1, WorldScan.MAX_RADIUS))
                     .then(ClientCommandManager.literal("shot")
                         .then(ClientCommandManager.argument("prompt", StringArgumentType.greedyString())
                             .executes(c -> {
@@ -167,7 +167,7 @@ public class ClaudeMCClient implements ClientModInitializer {
 
             // Targets of the clickable [Run] / [Run all] links printed in chat.
             .then(ClientCommandManager.literal("run")
-                .then(ClientCommandManager.argument("index", IntegerArgumentType.integer(1, 64))
+                .then(ClientCommandManager.argument("index", IntegerArgumentType.integer(1, WorldScan.MAX_RADIUS))
                     .executes(c -> {
                         runOne(IntegerArgumentType.getInteger(c, "index"));
                         return 1;
@@ -380,6 +380,7 @@ public class ClaudeMCClient implements ClientModInitializer {
         }
 
         if (scanRadius > 0) {
+            if (scanRadius > 96) Chat.dim("scanning r=" + scanRadius + ", this takes a moment");
             Path scan = WorldScan.dump(mc, scanRadius);
             if (scan != null) {
                 full.append("\nA block scan of the area is at scans/")

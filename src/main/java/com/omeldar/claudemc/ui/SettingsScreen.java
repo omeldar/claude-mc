@@ -19,7 +19,7 @@ public class SettingsScreen extends Screen {
     private static final String[] EFFORTS = {"", "low", "medium", "high"};
     private static final int[] DELAYS = {2, 3, 5, 8, 12};
     private static final int[] MAX_COMMANDS = {12, 24, 48};
-    private static final int[] SCAN_RADII = {8, 16, 24, 32, 48, 64};
+    private static final int[] SCAN_RADII = {8, 16, 24, 32, 48, 64, 96, 128, 192, 256};
 
     private final Screen parent;
     private TextFieldWidget modelField;
@@ -44,9 +44,9 @@ public class SettingsScreen extends Screen {
         int half = (w - 6) / 2;
         int y = 46;
 
-        addDrawableChild(cycler(left, y, half,
-                () -> "Model: " + cfg.model,
-                () -> { cfg.model = nextString(cfg.models, cfg.model); }));
+        addDrawableChild(ButtonWidget.builder(Text.literal("Model: " + cfg.model),
+                b -> MinecraftClient.getInstance().setScreen(new ModelPickerScreen(this)))
+                .dimensions(left, y, half, 20).build());
         addDrawableChild(cycler(left + half + 6, y, half,
                 () -> "Effort: " + (cfg.effort == null || cfg.effort.isBlank() ? "default" : cfg.effort),
                 () -> { cfg.effort = nextString(EFFORTS, cfg.effort == null ? "" : cfg.effort); }));

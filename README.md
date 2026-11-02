@@ -55,12 +55,13 @@ Nothing runs until you click.
 | **Live progress** | Replies stream, so you see each step — *"using scan_area"*, *"checking the floor"* — above the hotbar instead of a frozen wait. |
 | **Editable commands** | Every command in the approval menu is a text field. Nudge a radius or swap a block before you run it. |
 | **Room to type** | The prompt screen is a multi-line box (8000 chars), and the mod lifts vanilla's 256-character chat cap while the line starts with `/claude` or `/ai`. |
-| **Any model** | Cycle aliases or exact ids. `/claude model claude-opus-5-5` works, and whatever you type is remembered in the cycle list. |
+| **Any model** | A picker listing every verified id — four Opus versions, three Sonnet, two Haiku, two Fable, plus the aliases. Type any other id and it's remembered. |
 | **Usage in game** | `/claude usage` shows your quota windows as bars with reset times, plus what this game session has spent. It also nudges you once when a window passes 80%. |
 | **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
 | **Build memory** | Claude keeps `notes.md` in its workspace: coordinates, palettes, what each room is for. It survives sessions. |
 | **Mod-aware** | Sees which build tools you actually have — WorldEdit, Litematica, Axiom — and only suggests what's installed. |
+| **Sparse scans** | Scans go out to a 256-block radius because air is never written. Each layer is run-length spans of non-air blocks with exact coordinates; anything absent is air. |
 | **Direct world access** | Claude gets real MCP tools into the running client: read any block, scan a region, find where a block type occurs — and, in creative with cheats on, build straight from your description. |
 | **Safe by construction** | On survival worlds and servers without permission it is told *not to propose commands at all*, and refuses to run them if it does. |
 
@@ -98,7 +99,7 @@ WorldEdit is optional but strongly recommended — most useful answers are World
 | `/claude <prompt>` | Ask, keeping the current session |
 | `/claude new <prompt>` | Start a fresh session |
 | `/claude shot <prompt>` | Attach your newest screenshot (press <kbd>F2</kbd> first) |
-| `/claude scan <r> <prompt>` | Attach a block scan of radius `r` (1–64) |
+| `/claude scan <r> <prompt>` | Attach a block scan of radius `r` (1–256) |
 | `/claude shot scan <r> <prompt>` | Attach **both** — either order works |
 | `/claude model <name>` | `opus`, `sonnet`, `haiku`, `fable`, or a full model id |
 | `/claude effort <level>` | `low`, `medium`, `high`, `default` |
@@ -189,7 +190,7 @@ can look at the world instead of guessing:
 |---|---|
 | `get_context` | Live position, facing, biome, look target, installed mods, `can_build` |
 | `get_block` | One exact coordinate with its full block state |
-| `scan_area` | Cylinder scan: block histogram plus ASCII maps per layer |
+| `scan_area` | Cylinder scan out to radius 256, as run-length spans of non-air blocks |
 | `find_blocks` | Where a block type occurs nearby, with a bounding box |
 | `run_command` · `run_commands` | Build directly — **creative + command permission only** |
 | `say` | Narrate progress into your chat during a long build |
