@@ -34,11 +34,9 @@ public final class Workspace {
             Files.createDirectories(root());
             Files.createDirectories(shots());
             Files.createDirectories(scans());
+            Files.createDirectories(root().resolve("notes"));
             Files.writeString(root().resolve("CLAUDE.md"), CLAUDE_MD, StandardCharsets.UTF_8);
             Files.writeString(root().resolve(".gitignore"), "*\n", StandardCharsets.UTF_8);
-            if (!Files.exists(notesFile())) {
-                Files.writeString(notesFile(), NOTES_SEED, StandardCharsets.UTF_8);
-            }
         } catch (Exception e) {
             ClaudeMCClient.LOG.warn("could not prepare workspace", e);
         }
@@ -59,7 +57,7 @@ clicking buttons to run the commands you propose. You are not editing a codebase
 | `context.json` | The player's live state: position, facing, dimension, biome, what they are looking at, held item, game mode. **Rewritten immediately before every message you receive.** Read it before answering anything positional. |
 | `shots/` | Screenshots the player has sent. When a message names one, read it — you can see images. |
 | `scans/` | Block scans of the area around the player: a block histogram and, for small radii, per-layer ASCII maps with a legend. |
-| `notes.md` | **Your build memory.** Yours to read and write. Keep coordinates, palettes, measurements and decisions here so they survive into later sessions. Update it whenever the player settles on something. |
+| `notes/<world>.md` | **Your build memory, one file per world.** `context.json` names the right one under `notes.file`, with the world under `notes.world`. Read it before answering and update it whenever the player settles on something - coordinates, palettes, what a room is for. Never write to another world's file. A leftover `notes.md` from before notes were split is worth reading once and folding in. |
 
 Read `context.json` whenever the answer depends on where the player is or what is around them.
 Do not guess coordinates.
@@ -150,11 +148,4 @@ counts for a fill), "where did we leave off", palette memory, remembering what a
 and plain questions about mod behaviour. Short, concrete answers beat thorough ones.
 """;
 
-    private static final String NOTES_SEED = """
-# Build notes
-
-Claude keeps this file. Anything worth remembering between sessions goes here:
-coordinates, block palettes, what each area is for, decisions already made.
-
-""";
 }

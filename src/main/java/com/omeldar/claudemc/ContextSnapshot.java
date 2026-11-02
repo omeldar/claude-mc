@@ -71,6 +71,12 @@ public final class ContextSnapshot {
                 : "READ-ONLY: do not propose commands. " + CommandPermissions.explain(mc));
         root.add("permissions", perms);
 
+        JsonObject notes = new JsonObject();
+        notes.addProperty("world", WorldIdentity.label(mc));
+        notes.addProperty("file", WorldIdentity.notesRelativePath(mc));
+        notes.addProperty("note", "Notes are per world. Read and update this file, not any other.");
+        root.add("notes", notes);
+
         JsonObject pos = new JsonObject();
         pos.addProperty("x", round(p.getX()));
         pos.addProperty("y", round(p.getY()));

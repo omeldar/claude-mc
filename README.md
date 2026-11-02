@@ -59,7 +59,7 @@ Nothing runs until you click.
 | **Usage in game** | `/claude usage` shows your quota windows as bars with reset times, plus what this game session has spent. It also nudges you once when a window passes 80%. |
 | **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
-| **Build memory** | Claude keeps `notes.md` in its workspace: coordinates, palettes, what each room is for. It survives sessions. |
+| **Build memory, per world** | Claude keeps `notes/<world>.md`: coordinates, palettes, what each room is for. Each singleplayer world and each server gets its own file, so a build on one never bleeds into another. |
 | **Mod-aware** | Sees which build tools you actually have — WorldEdit, Litematica, Axiom — and only suggests what's installed. |
 | **Sparse scans** | Scans go out to a 256-block radius because air is never written. Each layer is run-length spans of non-air blocks with exact coordinates; anything absent is air. |
 | **Direct world access** | Claude gets real MCP tools into the running client: read any block, scan a region, find where a block type occurs — and, in creative with cheats on, build straight from your description. |
@@ -106,6 +106,8 @@ WorldEdit is optional but strongly recommended — most useful answers are World
 | `/claude open` | The prompt screen, with attachment toggles |
 | `/claude usage` | Quota windows and what this session cost |
 | `/claude settings` | The settings screen |
+| `/claude keys` | Bindings, conflicts, and rebinding |
+| `/claude notes` | Where this world's notes live |
 | `/claude last` | Reopen the approval menu |
 | `/claude undo` | Queue `//undo` |
 | `/claude cancel` | Drop anything still queued |
@@ -214,6 +216,10 @@ Defaults dodge the popular build mods as well as vanilla: <kbd>C</kbd> is Zoomif
 <kbd>V</kbd>, <kbd>M</kbd> and <kbd>I</kbd> belong to Litematica. Anything behind <kbd>F3</kbd>
 doesn't count, since those need the modifier held.
 
+That's only true of one particular mod list, though, so **on joining a world ClaudeMC checks its
+bindings against every other mod installed** and names any clash in chat with a `[Rebind]` link.
+`/claude keys` runs the same check on demand.
+
 ## Settings
 
 Everything is adjustable in game, no file editing:
@@ -232,8 +238,6 @@ Your choices stick between opens, and an unsent draft survives closing the scree
 
 ## Roadmap
 
-- [ ] Per-world notes instead of one shared `notes.md`
-- [ ] Warn in chat when a ClaudeMC key collides with another mod's
 - [ ] Render the proposal as a HUD list without opening a screen
 - [ ] Litematica schematic generation from a description
 

@@ -148,6 +148,21 @@ public class ClaudeMCClient implements ClientModInitializer {
                     return 1;
                 }))
 
+            .then(ClientCommandManager.literal("keys").executes(c -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                Keybinds.reportConflicts(mc, true);
+                mc.execute(() -> Keybinds.openKeybindScreen(mc));
+                return 1;
+            }))
+
+            .then(ClientCommandManager.literal("notes").executes(c -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                WorldIdentity.ensureNotes(mc);
+                Chat.dim("notes for " + WorldIdentity.label(mc) + ":");
+                Chat.dim("  " + WorldIdentity.notesFile(mc));
+                return 1;
+            }))
+
             .then(ClientCommandManager.literal("usage").executes(c -> {
                 usage();
                 return 1;
@@ -281,6 +296,8 @@ public class ClaudeMCClient implements ClientModInitializer {
         Chat.dim("/claude open                   the prompt screen, with toggles");
         Chat.dim("/claude settings               model, effort and the rest");
         Chat.dim("/claude usage                  quota windows and what this session cost");
+        Chat.dim("/claude keys                   bindings, conflicts, and rebinding");
+        Chat.dim("/claude notes                  where this world's notes live");
         Chat.dim("/claude last                   reopen the approval menu");
         Chat.dim("/claude undo | cancel | status");
         Chat.dim("Keys: Options - Controls - Key Binds - ClaudeMC, or the cog in Mod Menu.");
