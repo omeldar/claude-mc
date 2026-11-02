@@ -14,7 +14,8 @@
   "icon": "assets/claudemc/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": ["com.omeldar.claudemc.ClaudeMCClient"]
+    "client": ["com.omeldar.claudemc.ClaudeMCClient"],
+    "modmenu": ["com.omeldar.claudemc.ModMenuIntegration"]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
@@ -23,6 +24,7 @@
     "fabric-api": "*"
   },
   "suggests": {
-    "worldedit": "*"
+    "worldedit": "*",
+    "modmenu": "*"
   }
 }

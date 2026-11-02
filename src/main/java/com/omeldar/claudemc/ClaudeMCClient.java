@@ -6,6 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.omeldar.claudemc.ui.ApprovalScreen;
 import com.omeldar.claudemc.ui.PromptScreen;
+import com.omeldar.claudemc.ui.SettingsScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -138,6 +139,12 @@ public class ClaudeMCClient implements ClientModInitializer {
                     return 1;
                 }))
 
+            .then(ClientCommandManager.literal("settings").executes(c -> {
+                MinecraftClient mc = MinecraftClient.getInstance();
+                mc.execute(() -> mc.setScreen(new SettingsScreen(mc.currentScreen)));
+                return 1;
+            }))
+
             .then(ClientCommandManager.literal("open").executes(c -> {
                 MinecraftClient mc = MinecraftClient.getInstance();
                 mc.execute(() -> mc.setScreen(new PromptScreen()));
@@ -239,9 +246,10 @@ public class ClaudeMCClient implements ClientModInitializer {
         Chat.dim("/claude model <name>           opus, sonnet, haiku, fable, or a full id");
         Chat.dim("/claude effort <level>         low, medium, high, default");
         Chat.dim("/claude open                   the prompt screen, with toggles");
+        Chat.dim("/claude settings               model, effort and the rest");
         Chat.dim("/claude last                   reopen the approval menu");
         Chat.dim("/claude undo | cancel | status");
-        Chat.dim("Keys are rebindable in Options - Controls - ClaudeMC.");
+        Chat.dim("Keys: Options - Controls - Key Binds - ClaudeMC, or the cog in Mod Menu.");
     }
 
     private static void status() {

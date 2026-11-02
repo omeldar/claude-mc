@@ -11,8 +11,12 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * Keys, all rebindable from Options - Controls - ClaudeMC. Defaults are chosen to avoid
- * vanilla bindings; anyone who disagrees can change them in the usual place.
+ * Keys, all rebindable from Options - Controls - Key Binds, under the ClaudeMC category,
+ * or via the "Key binds..." button in the mod's own settings screen.
+ *
+ * <p>Defaults dodge both vanilla and the popular build mods: C is Zoomify's zoom, and V, M and
+ * I belong to Litematica (print, main menu, info overlay). H and U are clear of all of them.
+ * Anything plain-F3 uses does not count - those need the modifier held.
  */
 public final class Keybinds {
     private static final KeyBinding.Category CATEGORY =
@@ -26,9 +30,9 @@ public final class Keybinds {
 
     public static void register() {
         openPrompt = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.claudemc.prompt", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY));
+                "key.claudemc.prompt", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, CATEGORY));
         openLast = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.claudemc.last", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY));
+                "key.claudemc.last", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, CATEGORY));
         undo = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.claudemc.undo", InputUtil.Type.KEYSYM, InputUtil.UNKNOWN_KEY.getCode(), CATEGORY));
 

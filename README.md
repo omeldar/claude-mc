@@ -200,9 +200,25 @@ Rebindable in **Options → Controls → ClaudeMC**:
 
 | Default | Action |
 |---|---|
-| <kbd>C</kbd> | Open the prompt screen |
-| <kbd>V</kbd> | Reopen the last proposal |
+| <kbd>H</kbd> | Open the prompt screen |
+| <kbd>U</kbd> | Reopen the last proposal |
 | *unbound* | Undo last WorldEdit |
+
+Defaults dodge the popular build mods as well as vanilla: <kbd>C</kbd> is Zoomify's zoom, and
+<kbd>V</kbd>, <kbd>M</kbd> and <kbd>I</kbd> belong to Litematica. Anything behind <kbd>F3</kbd>
+doesn't count, since those need the modifier held.
+
+## Settings
+
+Everything is adjustable in game, no file editing:
+
+- **Mod Menu** — the cog next to ClaudeMC in the Mods tab
+- `/claude settings` — the same screen
+- `/claude model <name>` and `/claude effort <level>` — quick switches
+
+Model, effort, live progress, the gap between queued commands, max commands per reply, default
+scan radius, the world-tools port and the path to `claude` all live there, plus a
+**Key binds...** button straight into vanilla's rebinding screen.
 
 The prompt screen is the comfortable way in: a text box, independent **Screenshot** and
 **Scan** toggles that combine freely, a session keep/new switch, and model + effort cyclers.
@@ -211,6 +227,7 @@ Your choices stick between opens, and an unsent draft survives closing the scree
 ## Roadmap
 
 - [ ] Per-world notes instead of one shared `notes.md`
+- [ ] Warn in chat when a ClaudeMC key collides with another mod's
 - [ ] Render the proposal as a HUD list without opening a screen
 - [ ] Litematica schematic generation from a description
 
