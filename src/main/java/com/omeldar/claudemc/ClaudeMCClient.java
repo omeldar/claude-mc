@@ -139,6 +139,11 @@ public class ClaudeMCClient implements ClientModInitializer {
                     return 1;
                 }))
 
+            .then(ClientCommandManager.literal("usage").executes(c -> {
+                usage();
+                return 1;
+            }))
+
             .then(ClientCommandManager.literal("settings").executes(c -> {
                 MinecraftClient mc = MinecraftClient.getInstance();
                 mc.execute(() -> mc.setScreen(new SettingsScreen(mc.currentScreen)));
@@ -247,6 +252,7 @@ public class ClaudeMCClient implements ClientModInitializer {
         Chat.dim("/claude effort <level>         low, medium, high, default");
         Chat.dim("/claude open                   the prompt screen, with toggles");
         Chat.dim("/claude settings               model, effort and the rest");
+        Chat.dim("/claude usage                  quota windows and what this session cost");
         Chat.dim("/claude last                   reopen the approval menu");
         Chat.dim("/claude undo | cancel | status");
         Chat.dim("Keys: Options - Controls - Key Binds - ClaudeMC, or the cog in Mod Menu.");
@@ -264,6 +270,7 @@ public class ClaudeMCClient implements ClientModInitializer {
         Chat.dim("queue        " + CommandQueue.pending() + " pending");
         Chat.dim("bridge       " + (cfg.bridgeEnabled ? "127.0.0.1:" + cfg.bridgePort : "off"));
         Chat.dim("workspace    " + Workspace.root());
+        if (Usage.hasLimits()) Chat.dim("quota        " + Usage.compact());
         if (CommandPermissions.allowed(mc)) {
             Chat.info(Text.literal("commands     allowed (" + CommandPermissions.authority(mc) + ")")
                     .formatted(Formatting.GREEN));
@@ -271,6 +278,47 @@ public class ClaudeMCClient implements ClientModInitializer {
             Chat.info(Text.literal("commands     READ-ONLY (" + CommandPermissions.authority(mc) + ")")
                     .formatted(Formatting.RED));
             Chat.dim(CommandPermissions.explain(mc));
+        }
+    }
+
+    private static void usage() {
+        if (!Usage.hasLimits() && !Usage.hasSpend()) {
+            Chat.dim("nothing recorded yet - ask something first");
+            return;
+        }
+        Chat.info(Text.literal("Usage").formatted(Formatting.GOLD));
+
+        if (Usage.hasLimits()) {
+            for (Usage.Window w : Usage.windows().values()) {
+                Formatting colour = !w.isHealthy() ? Formatting.RED
+                        : w.utilization() >= 0.8 ? Formatting.RED
+                        : w.utilization() >= 0.5 ? Formatting.YELLOW
+                        : Formatting.GREEN;
+                String resets = w.resetsIn();
+                Chat.info(Text.literal(String.format("%-11s", w.shortLabel()))
+                                .formatted(Formatting.GRAY)
+                        .append(Text.literal(Usage.bar(w.utilization())).formatted(colour))
+                        .append(Text.literal(String.format(" %3d%%", w.percent()))
+                                .formatted(colour))
+                        .append(Text.literal(resets.isEmpty() ? "" : "  resets in " + resets)
+                                .formatted(Formatting.DARK_GRAY)));
+            }
+            if (Usage.usingOverage()) Chat.warn("currently drawing on overage");
+        } else {
+            Chat.dim("no quota information yet - it arrives with the next reply");
+        }
+
+        if (Usage.hasSpend()) {
+            Chat.dim("this session  " + Usage.messages() + " message"
+                    + (Usage.messages() == 1 ? "" : "s")
+                    + ", " + Usage.turns() + " turns, "
+                    + String.format("%.1fs", Usage.totalMillis() / 1000.0));
+            Chat.dim("tokens        in " + Usage.tokens(Usage.inputTokens())
+                    + "  out " + Usage.tokens(Usage.outputTokens())
+                    + "  cache read " + Usage.tokens(Usage.cacheReadTokens())
+                    + "  written " + Usage.tokens(Usage.cacheWriteTokens()));
+            Chat.dim(String.format("equivalent    $%.3f at list price"
+                    + " (subscription use comes out of the windows above)", Usage.costUsd()));
         }
     }
 
@@ -345,7 +393,8 @@ public class ClaudeMCClient implements ClientModInitializer {
         }
 
         if (proposal.isEmpty()) {
-            Chat.overlay("answered");
+            Chat.overlay("answered" + (Usage.hasLimits() ? "   " + Usage.compact() : ""));
+            warnIfTight();
             return;
         }
 
@@ -357,7 +406,26 @@ public class ClaudeMCClient implements ClientModInitializer {
         }
 
         Chat.proposal(proposal);
-        Chat.overlay(proposal.size() + " command" + (proposal.size() == 1 ? "" : "s") + " ready");
+        Chat.overlay(proposal.size() + " command" + (proposal.size() == 1 ? "" : "s") + " ready"
+                + (Usage.hasLimits() ? "   " + Usage.compact() : ""));
+        warnIfTight();
+    }
+
+    /** One nudge per threshold crossing, not one per message. */
+    private static double lastWarnedAt = 0;
+
+    private static void warnIfTight() {
+        double peak = Usage.peakUtilization();
+        if (peak >= 0.9 && lastWarnedAt < 0.9) {
+            Chat.warn("quota is at " + Math.round(peak * 100) + "% - " + Usage.compact()
+                    + ". /claude usage for the detail.");
+            lastWarnedAt = 0.9;
+        } else if (peak >= 0.8 && lastWarnedAt < 0.8) {
+            Chat.dim("heads up: quota at " + Math.round(peak * 100) + "% - " + Usage.compact());
+            lastWarnedAt = 0.8;
+        } else if (peak < 0.75) {
+            lastWarnedAt = 0;   // a window rolled over
+        }
     }
 
     /** Copies the newest file from the screenshots folder into the workspace. */

@@ -229,6 +229,11 @@ public final class ClaudeRunner {
                 String type = text(event, "type", "");
                 switch (type) {
                     case "system" -> onProgress.accept("session ready");
+                    case "rate_limit_event" -> {
+                        if (event.has("rate_limit_info") && event.get("rate_limit_info").isJsonObject()) {
+                            Usage.updateLimits(event.getAsJsonObject("rate_limit_info"));
+                        }
+                    }
                     case "assistant" -> describeTurn(event, onProgress);
                     case "result" -> {
                         if (event.has("session_id") && !event.get("session_id").isJsonNull()) {
@@ -237,6 +242,7 @@ public final class ClaudeRunner {
                         }
                         sawError = event.has("is_error") && event.get("is_error").getAsBoolean();
                         reply = text(event, "result", "");
+                        Usage.recordResult(event);
                     }
                     default -> { }
                 }
@@ -264,6 +270,7 @@ public final class ClaudeRunner {
             }
             sawError = envelope.has("is_error") && envelope.get("is_error").getAsBoolean();
             reply = text(envelope, "result", "");
+            Usage.recordResult(envelope);
         }
 
         if (reply == null) throw failure(err, proc);

@@ -54,6 +54,7 @@ Nothing runs until you click.
 | **Sessions that remember** | The conversation persists across prompts *and across game restarts*. `/claude new` starts fresh. |
 | **Live progress** | Replies stream, so you see each step — *"using scan_area"*, *"checking the floor"* — above the hotbar instead of a frozen wait. |
 | **Editable commands** | Every command in the approval menu is a text field. Nudge a radius or swap a block before you run it. |
+| **Usage in game** | `/claude usage` shows your quota windows as bars with reset times, plus what this game session has spent. It also nudges you once when a window passes 80%. |
 | **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
 | **Build memory** | Claude keeps `notes.md` in its workspace: coordinates, palettes, what each room is for. It survives sessions. |
@@ -100,6 +101,8 @@ WorldEdit is optional but strongly recommended — most useful answers are World
 | `/claude model <name>` | `opus`, `sonnet`, `haiku`, `fable`, or a full model id |
 | `/claude effort <level>` | `low`, `medium`, `high`, `default` |
 | `/claude open` | The prompt screen, with attachment toggles |
+| `/claude usage` | Quota windows and what this session cost |
+| `/claude settings` | The settings screen |
 | `/claude last` | Reopen the approval menu |
 | `/claude undo` | Queue `//undo` |
 | `/claude cancel` | Drop anything still queued |

@@ -4,6 +4,7 @@ import com.omeldar.claudemc.ClaudeMCClient;
 import com.omeldar.claudemc.ClaudeRunner;
 import com.omeldar.claudemc.CommandPermissions;
 import com.omeldar.claudemc.Config;
+import com.omeldar.claudemc.Usage;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -172,8 +173,10 @@ public class PromptScreen extends Screen {
                 left, top - 14,
                 CommandPermissions.allowed(mc) ? 0xFF7A7A7A : 0xFFFF8080);
 
+        String hint = "Enter to send   Esc to close";
+        if (Usage.hasLimits()) hint = hint + "      quota  " + Usage.compact();
         context.drawTextWithShadow(this.textRenderer,
-                Text.literal("Enter to send   Esc to close").formatted(Formatting.DARK_GRAY),
+                Text.literal(hint).formatted(Formatting.DARK_GRAY),
                 left, this.height / 2 + 36, 0xFF606060);
     }
 
