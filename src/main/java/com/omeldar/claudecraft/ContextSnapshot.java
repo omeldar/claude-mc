@@ -64,6 +64,8 @@ public final class ContextSnapshot {
         perms.addProperty("commandsAllowed", CommandPermissions.allowed(mc));
         perms.addProperty("authority", CommandPermissions.authority(mc));
         perms.addProperty("singleplayer", mc.isInSingleplayer());
+        perms.addProperty("can_build", CommandPermissions.allowed(mc) && mc.interactionManager != null
+                && mc.interactionManager.getCurrentGameMode().isCreative());
         perms.addProperty("note", CommandPermissions.allowed(mc)
                 ? "Commands run as this player, under their own name and permissions."
                 : "READ-ONLY: do not propose commands. " + CommandPermissions.explain(mc));

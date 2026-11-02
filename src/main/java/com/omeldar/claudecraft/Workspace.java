@@ -26,6 +26,7 @@ public final class Workspace {
     public static Path bridgeFile() { return root().resolve("bridge.json"); }
     public static Path sessionFile() { return root().resolve("session.txt"); }
     public static Path notesFile() { return root().resolve("notes.md"); }
+    public static Path mcpConfigFile() { return root().resolve("mcp.json"); }
 
     public static void ensure() {
         try {
@@ -103,6 +104,26 @@ Rules for that block:
 - Copper bulbs need `[lit=true]` or they sit dark. Oxidation sets brightness: oxidized 4,
   weathered 8, exposed 12, plain 15.
 - Large selections need `//limit -1` first.
+
+## Direct world access
+
+You usually have `mcp__minecraft` tools wired straight into the running client:
+
+| Tool | Use it for |
+|---|---|
+| `get_context` | Everything in `context.json`, live. Includes `can_build`. |
+| `get_block` | One exact coordinate, with its full block state. |
+| `scan_area` | A cylinder around the player: histogram, and ASCII maps for radius <= 32. |
+| `find_blocks` | Where a block type occurs nearby, with a bounding box. |
+| `run_command` / `run_commands` | Build directly. **Creative plus command permission only.** |
+| `say` | Narrate progress into chat during a long build. |
+
+Look before you build. `scan_area` and `find_blocks` cost nothing and beat guessing a
+coordinate wrong. After running commands, give the queue a moment and then check the result
+with `get_block` or `scan_area` rather than assuming it worked.
+
+If `run_commands` refuses, it tells you why - do not retry it. Fall back to the json block so
+the player can approve the commands by hand, or answer with advice.
 
 ## Permissions - check this before proposing anything
 

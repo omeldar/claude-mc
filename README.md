@@ -56,6 +56,7 @@ Nothing runs until you click.
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
 | **Build memory** | Claude keeps `notes.md` in its workspace: coordinates, palettes, what each room is for. It survives sessions. |
 | **Mod-aware** | Sees which build tools you actually have — WorldEdit, Litematica, Axiom — and only suggests what's installed. |
+| **Direct world access** | Claude gets real MCP tools into the running client: read any block, scan a region, find where a block type occurs — and, in creative with cheats on, build straight from your description. |
 | **Safe by construction** | On survival worlds and servers without permission it is told *not to propose commands at all*, and refuses to run them if it does. |
 
 ## Safety model
@@ -167,10 +168,27 @@ python tools/make_icons.py   # regenerate the mark and mod icon
 
 Requires JDK 21+ — Gradle provisions a matching toolchain automatically.
 
+## Direct world access
+
+Every session the mod starts is handed an MCP server pointing back at your client, so Claude
+can look at the world instead of guessing:
+
+| Tool | What it does |
+|---|---|
+| `get_context` | Live position, facing, biome, look target, installed mods, `can_build` |
+| `get_block` | One exact coordinate with its full block state |
+| `scan_area` | Cylinder scan: block histogram plus ASCII maps per layer |
+| `find_blocks` | Where a block type occurs nearby, with a bounding box |
+| `run_command` · `run_commands` | Build directly — **creative + command permission only** |
+| `say` | Narrate progress into your chat during a long build |
+
+Reads always work. Writes are refused outside creative, refused without command permission,
+still filtered by the deny list, still spaced out by the queue, and still stoppable with
+`/claude cancel`. The refusal tells Claude *why*, so it falls back to proposing commands for
+you to approve instead of retrying.
+
 ## Roadmap
 
-- [ ] Direct world access as MCP tools: read any block, query regions, build from a description
-      (creative + cheats only)
 - [ ] Configurable keybind to reopen the last proposal
 - [ ] Inline editing of a command before running it
 - [ ] Streaming replies instead of waiting for the full answer

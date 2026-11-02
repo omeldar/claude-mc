@@ -41,6 +41,7 @@ public final class BridgeServer {
             server.createContext("/ping", BridgeServer::handlePing);
             server.createContext("/context", BridgeServer::handleContext);
             server.createContext("/propose", BridgeServer::handlePropose);
+            server.createContext("/mcp", McpBridge::handle);
             server.setExecutor(Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "claudecraft-bridge");
                 t.setDaemon(true);
@@ -55,7 +56,21 @@ public final class BridgeServer {
             info.addProperty("header", "X-ClaudeCraft-Token");
             Files.writeString(Workspace.bridgeFile(), GSON.toJson(info), StandardCharsets.UTF_8);
 
-            ClaudeCraftClient.LOG.info("bridge listening on 127.0.0.1:{}", cfg.bridgePort);
+            // The MCP server definition handed to every Claude Code session we start, so it can
+            // look at the world directly instead of working from the snapshot alone.
+            JsonObject headers = new JsonObject();
+            headers.addProperty("X-ClaudeCraft-Token", cfg.bridgeToken);
+            JsonObject minecraft = new JsonObject();
+            minecraft.addProperty("type", "http");
+            minecraft.addProperty("url", "http://127.0.0.1:" + cfg.bridgePort + "/mcp");
+            minecraft.add("headers", headers);
+            JsonObject servers = new JsonObject();
+            servers.add("minecraft", minecraft);
+            JsonObject mcp = new JsonObject();
+            mcp.add("mcpServers", servers);
+            Files.writeString(Workspace.mcpConfigFile(), GSON.toJson(mcp), StandardCharsets.UTF_8);
+
+            ClaudeCraftClient.LOG.info("bridge listening on 127.0.0.1:{} (http + mcp)", cfg.bridgePort);
         } catch (Exception e) {
             ClaudeCraftClient.LOG.warn("bridge could not start on port {}", cfg.bridgePort, e);
             server = null;

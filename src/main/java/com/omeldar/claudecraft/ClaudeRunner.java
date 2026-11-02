@@ -77,7 +77,14 @@ public final class ClaudeRunner {
             keep both slashes. Order matters; they run top to bottom. Prefer commands //undo can \
             reverse, and say in note when one cannot. Never propose /op, /ban, /kick, /whitelist \
             or /stop. At most 12 commands per reply - if the job is bigger, propose the first \
-            stage and say what follows. If no commands are needed, omit the json block entirely.
+            stage and say what follows. If no commands are needed, omit the json block entirely. \
+            You may also have mcp__minecraft tools wired to the running client: get_context, \
+            get_block, scan_area, find_blocks, run_command, run_commands and say. Use them to \
+            look at the world instead of guessing coordinates. run_command and run_commands \
+            build directly and only work when the player is in creative with command permission; \
+            if they refuse, fall back to proposing the commands in the json block so the player \
+            can approve them by hand. For anything larger than a few blocks, prefer one \
+            run_commands call over many single ones.
             """;
 
     /**
@@ -137,10 +144,19 @@ public final class ClaudeRunner {
             args.add("--session-id");
             args.add(sid);
         }
+        // Hand over the live game as MCP tools, so Claude can read blocks and - in creative
+        // with commands enabled - build directly instead of only proposing.
+        boolean mcp = cfg.bridgeEnabled && Files.exists(Workspace.mcpConfigFile());
+        if (mcp) {
+            args.add("--mcp-config");
+            args.add(Workspace.mcpConfigFile().toString());
+            args.add("--strict-mcp-config");
+        }
+
         // Read for context.json, screenshots and scans; Write/Edit so notes.md works as
         // build memory. The working directory is the mod's own folder, nothing else.
         args.add("--allowedTools");
-        args.add("Read Glob Grep Write Edit");
+        args.add("Read Glob Grep Write Edit" + (mcp ? " mcp__minecraft" : ""));
         args.add("--append-system-prompt");
         args.add(CONTRACT);
 
