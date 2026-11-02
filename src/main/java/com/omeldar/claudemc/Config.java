@@ -16,8 +16,16 @@ public final class Config {
 
     /** Absolute path to the claude executable. Empty means auto-detect. */
     public String claudePath = "";
-    /** Model alias passed to --model: sonnet, opus, fable, haiku, or a full model name. */
+    /** Model alias or exact id passed to --model. Anything the CLI accepts works. */
     public String model = "opus";
+    /**
+     * The list the in-game model button cycles through. Add exact ids here to switch between
+     * specific versions rather than aliases - an alias always means the newest of its family.
+     */
+    public String[] models = {
+        "opus", "sonnet", "haiku", "fable",
+        "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"
+    };
     /** Passed to --effort when non-empty: low, medium, high. */
     public String effort = "";
     /** How long to wait for a reply before giving up. */
@@ -37,6 +45,8 @@ public final class Config {
     public boolean streaming = true;
     /** Echo each progress step into chat as well as the action bar. Noisy; off by default. */
     public boolean showProgressInChat = false;
+    /** How many characters the chat box accepts while the line starts with /claude or /ai. */
+    public int chatPromptLimit = 2000;
     /** Commands matching these prefixes are never run, whatever Claude proposes. */
     public String[] blockedPrefixes = {
         "/stop", "/op", "/deop", "/ban", "/ban-ip", "/kick", "/whitelist", "/pardon", "/save-off"
@@ -69,6 +79,9 @@ public final class Config {
         if (c.bridgeToken == null || c.bridgeToken.isBlank()) {
             c.bridgeToken = UUID.randomUUID().toString();
         }
+        if (c.models == null || c.models.length == 0) {
+            c.models = new Config().models;
+        }
         if (c.blockedPrefixes == null) {
             c.blockedPrefixes = new Config().blockedPrefixes;
         }
@@ -84,6 +97,18 @@ public final class Config {
         } catch (Exception e) {
             ClaudeMCClient.LOG.warn("could not write config", e);
         }
+    }
+
+    /** Adds a model id to the cycle list if it is not already there. */
+    public void rememberModel(String id) {
+        if (id == null || id.isBlank()) return;
+        for (String m : models) {
+            if (m.equalsIgnoreCase(id)) return;
+        }
+        String[] grown = new String[models.length + 1];
+        System.arraycopy(models, 0, grown, 0, models.length);
+        grown[models.length] = id;
+        models = grown;
     }
 
     /** True if this command is on the deny list. Leading slashes are normalised first. */

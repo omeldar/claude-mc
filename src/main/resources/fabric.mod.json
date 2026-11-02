@@ -17,6 +17,12 @@
     "client": ["com.omeldar.claudemc.ClaudeMCClient"],
     "modmenu": ["com.omeldar.claudemc.ModMenuIntegration"]
   },
+  "mixins": [
+    {
+      "config": "claudemc.mixins.json",
+      "environment": "client"
+    }
+  ],
   "depends": {
     "fabricloader": ">=0.16.0",
     "minecraft": "~1.21.11",

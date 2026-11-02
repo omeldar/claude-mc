@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.omeldar.claudemc.mixin.ChatScreenAccessor;
 import com.omeldar.claudemc.ui.ApprovalScreen;
 import com.omeldar.claudemc.ui.PromptScreen;
 import com.omeldar.claudemc.ui.SettingsScreen;
@@ -14,6 +15,8 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.slf4j.Logger;
@@ -49,6 +52,7 @@ public class ClaudeMCClient implements ClientModInitializer {
         Keybinds.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(CommandQueue::tick);
+        ClientTickEvents.END_CLIENT_TICK.register(ClaudeMCClient::stretchChatBox);
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, access) -> {
             LiteralCommandNode<FabricClientCommandSource> node = dispatcher.register(tree("claude"));
@@ -106,13 +110,18 @@ public class ClaudeMCClient implements ClientModInitializer {
                         Config cfg = Config.get();
                         cfg.model = StringArgumentType.getString(c, "model");
                         cfg.save();
+                        cfg.rememberModel(cfg.model);
+                        cfg.save();
                         Chat.info("model set to " + cfg.model
                                 + " (takes effect on the next message)");
                         return 1;
                     }))
                 .executes(c -> {
                     Chat.dim("model is " + Config.get().model
-                            + "   try: opus, sonnet, haiku, fable, or a full model name");
+                            + (ClaudeRunner.resolvedModel().isBlank() ? ""
+                               : "  (last run as " + ClaudeRunner.resolvedModel() + ")"));
+                    Chat.dim("known: " + String.join(", ", Config.get().models));
+                    Chat.dim("any exact id works too, e.g. /claude model claude-opus-5-5");
                     return 1;
                 }))
 
@@ -212,6 +221,25 @@ public class ClaudeMCClient implements ClientModInitializer {
             });
     }
 
+    /**
+     * Vanilla caps the chat box at 256 characters, which cuts detailed prompts short. While the
+     * line being typed is one of ours the cap is lifted - these are client commands, so nothing
+     * oversized is ever sent to a server. The moment the text stops being ours it goes back.
+     */
+    private static void stretchChatBox(MinecraftClient mc) {
+        if (!(mc.currentScreen instanceof ChatScreen chat)) return;
+        try {
+            TextFieldWidget field = ((ChatScreenAccessor) chat).claudemc$chatField();
+            if (field == null) return;
+            String text = field.getText();
+            boolean ours = text.startsWith("/claude") || text.startsWith("/ai");
+            field.setMaxLength(ours ? Math.max(256, Config.get().chatPromptLimit) : 256);
+        } catch (Exception e) {
+            // Never let a cosmetic tweak break chat.
+            ClaudeMCClient.LOG.debug("could not adjust chat box length", e);
+        }
+    }
+
     private static void runOne(int oneBased) {
         if (lastProposal == null || oneBased > lastProposal.size()) {
             Chat.warn("no such command in the last proposal");
@@ -263,7 +291,9 @@ public class ClaudeMCClient implements ClientModInitializer {
         Config cfg = Config.get();
         Chat.info(Text.literal("ClaudeMC status").formatted(Formatting.GOLD));
         Chat.dim("model        " + cfg.model
-                + (cfg.effort == null || cfg.effort.isBlank() ? "" : "  effort " + cfg.effort));
+                + (ClaudeRunner.resolvedModel().isBlank() ? ""
+                   : " -> " + ClaudeRunner.resolvedModel())
+                + (cfg.effort == null || cfg.effort.isBlank() ? "" : "   effort " + cfg.effort));
         Chat.dim("session      " + Optional.ofNullable(ClaudeRunner.sessionId()).orElse("none yet"));
         Chat.dim("claude       " + ClaudeRunner.resolveExecutable());
         Chat.dim("streaming    " + (cfg.streaming ? "on" : "off"));

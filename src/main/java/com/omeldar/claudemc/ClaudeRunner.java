@@ -34,6 +34,8 @@ public final class ClaudeRunner {
     private static final Gson GSON = new Gson();
 
     private static volatile String sessionId = null;
+    /** What the CLI actually resolved --model to, e.g. "opus" -> "claude-opus-5-5". */
+    private static volatile String resolvedModel = "";
     private static volatile boolean busy = false;
     private static volatile Process current = null;
 
@@ -42,6 +44,8 @@ public final class ClaudeRunner {
     public static boolean isBusy() { return busy; }
 
     public static String sessionId() { return sessionId; }
+
+    public static String resolvedModel() { return resolvedModel; }
 
     public static void newSession() {
         sessionId = null;
@@ -228,7 +232,11 @@ public final class ClaudeRunner {
                 }
                 String type = text(event, "type", "");
                 switch (type) {
-                    case "system" -> onProgress.accept("session ready");
+                    case "system" -> {
+                        String m = text(event, "model", "");
+                        if (!m.isBlank()) resolvedModel = m;
+                        onProgress.accept("session ready");
+                    }
                     case "rate_limit_event" -> {
                         if (event.has("rate_limit_info") && event.get("rate_limit_info").isJsonObject()) {
                             Usage.updateLimits(event.getAsJsonObject("rate_limit_info"));
@@ -273,6 +281,10 @@ public final class ClaudeRunner {
             Usage.recordResult(envelope);
         }
 
+        if (raw.indexOf("unrecognized_model") >= 0) {
+            throw new IllegalStateException("the CLI does not recognise model \"" + cfg.model
+                    + "\" - use /claude model <id> to pick another, or an alias like opus");
+        }
         if (reply == null) throw failure(err, proc);
         if (sawError) throw new IllegalStateException(trim(reply.isBlank()
                 ? "claude reported an error" : reply, 300));

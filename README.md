@@ -54,6 +54,8 @@ Nothing runs until you click.
 | **Sessions that remember** | The conversation persists across prompts *and across game restarts*. `/claude new` starts fresh. |
 | **Live progress** | Replies stream, so you see each step — *"using scan_area"*, *"checking the floor"* — above the hotbar instead of a frozen wait. |
 | **Editable commands** | Every command in the approval menu is a text field. Nudge a radius or swap a block before you run it. |
+| **Room to type** | The prompt screen is a multi-line box (8000 chars), and the mod lifts vanilla's 256-character chat cap while the line starts with `/claude` or `/ai`. |
+| **Any model** | Cycle aliases or exact ids. `/claude model claude-opus-5-5` works, and whatever you type is remembered in the cycle list. |
 | **Usage in game** | `/claude usage` shows your quota windows as bars with reset times, plus what this game session has spent. It also nudges you once when a window passes 80%. |
 | **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
 | **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |

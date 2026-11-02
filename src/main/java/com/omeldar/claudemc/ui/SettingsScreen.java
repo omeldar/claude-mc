@@ -16,15 +16,16 @@ import net.minecraft.util.Formatting;
  * it works whatever else is installed.
  */
 public class SettingsScreen extends Screen {
-    private static final String[] MODELS = {"opus", "sonnet", "haiku", "fable"};
     private static final String[] EFFORTS = {"", "low", "medium", "high"};
     private static final int[] DELAYS = {2, 3, 5, 8, 12};
     private static final int[] MAX_COMMANDS = {12, 24, 48};
     private static final int[] SCAN_RADII = {8, 16, 24, 32, 48, 64};
 
     private final Screen parent;
+    private TextFieldWidget modelField;
     private TextFieldWidget portField;
     private TextFieldWidget pathField;
+    private int modelLabelY;
     private int portLabelY;
     private int pathLabelY;
 
@@ -45,7 +46,7 @@ public class SettingsScreen extends Screen {
 
         addDrawableChild(cycler(left, y, half,
                 () -> "Model: " + cfg.model,
-                () -> { cfg.model = nextString(MODELS, cfg.model); }));
+                () -> { cfg.model = nextString(cfg.models, cfg.model); }));
         addDrawableChild(cycler(left + half + 6, y, half,
                 () -> "Effort: " + (cfg.effort == null || cfg.effort.isBlank() ? "default" : cfg.effort),
                 () -> { cfg.effort = nextString(EFFORTS, cfg.effort == null ? "" : cfg.effort); }));
@@ -75,6 +76,15 @@ public class SettingsScreen extends Screen {
                 () -> { cfg.bridgeEnabled = !cfg.bridgeEnabled; }));
 
         y += 30;
+        modelLabelY = y + 5;
+        modelField = new TextFieldWidget(this.textRenderer, left + 150, y, w - 150, 18,
+                Text.literal("model id"));
+        modelField.setMaxLength(128);
+        modelField.setText(cfg.model);
+        modelField.setPlaceholder(Text.literal("e.g. claude-opus-5-5").formatted(Formatting.DARK_GRAY));
+        addDrawableChild(modelField);
+
+        y += 24;
         portLabelY = y + 5;
         portField = new TextFieldWidget(this.textRenderer, left + 150, y, w - 150, 18,
                 Text.literal("port"));
@@ -128,6 +138,11 @@ public class SettingsScreen extends Screen {
 
     private void save() {
         Config cfg = Config.get();
+        String typed = modelField == null ? "" : modelField.getText().trim();
+        if (!typed.isEmpty()) {
+            cfg.model = typed;
+            cfg.rememberModel(typed);   // so the cycle button offers it next time
+        }
         try {
             int port = Integer.parseInt(portField.getText().trim());
             if (port >= 1024 && port <= 65535) cfg.bridgePort = port;
@@ -156,6 +171,8 @@ public class SettingsScreen extends Screen {
                 Text.literal("Changes apply to the next message.").formatted(Formatting.GRAY),
                 left, 30, 0xFF7A7A7A);
 
+        context.drawTextWithShadow(this.textRenderer, Text.literal("Exact model id"),
+                left, modelLabelY, 0xFFBBBBBB);
         context.drawTextWithShadow(this.textRenderer, Text.literal("World tools port"),
                 left, portLabelY, 0xFFBBBBBB);
         context.drawTextWithShadow(this.textRenderer, Text.literal("claude executable"),
