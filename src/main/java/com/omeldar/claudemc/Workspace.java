@@ -27,6 +27,7 @@ public final class Workspace {
     public static Path sessionFile() { return root().resolve("session.txt"); }
     public static Path notesFile() { return root().resolve("notes.md"); }
     public static Path mcpConfigFile() { return root().resolve("mcp.json"); }
+    public static Path contractFile() { return root().resolve("contract.md"); }
 
     public static void ensure() {
         try {

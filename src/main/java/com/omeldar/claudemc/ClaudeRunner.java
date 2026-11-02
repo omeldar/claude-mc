@@ -177,8 +177,15 @@ public final class ClaudeRunner {
         // build memory. The working directory is the mod's own folder, nothing else.
         args.add("--allowedTools");
         args.add("Read Glob Grep Write Edit" + (mcp ? " mcp__minecraft" : ""));
-        args.add("--append-system-prompt");
-        args.add(CONTRACT);
+        // The contract goes through a FILE, never an argument. Java's Windows command-line
+        // quoting strips embedded double quotes and then splits the argument on the whitespace
+        // that leaves behind - so passing this inline turned "//cyl stone 10 1" into loose
+        // tokens, and "stone" arrived as a positional prompt. See guardQuotes below.
+        Files.writeString(Workspace.contractFile(), CONTRACT, StandardCharsets.UTF_8);
+        args.add("--append-system-prompt-file");
+        args.add(Workspace.contractFile().toString());
+
+        guardQuotes(args);
 
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.directory(Workspace.root().toFile());
@@ -266,6 +273,22 @@ public final class ClaudeRunner {
         Proposal p = parse(reply);
         p.sessionId = sessionId == null ? "" : sessionId;
         return p;
+    }
+
+    /**
+     * Java quotes process arguments for the Windows command line, and its quoting cannot
+     * survive an embedded double quote: the quote is dropped and the argument splits at the
+     * whitespace around it. Nothing we pass should contain one - if something ever does, say
+     * so loudly rather than letting a fragment of it arrive as the player's prompt.
+     */
+    private static void guardQuotes(List<String> args) {
+        for (String a : args) {
+            if (a.indexOf('"') >= 0) {
+                ClaudeMCClient.LOG.error(
+                        "argument contains a double quote and will be mangled on Windows: {}",
+                        a.length() > 120 ? a.substring(0, 120) + "..." : a);
+            }
+        }
     }
 
     /** Turns one assistant event into a one-line progress note. */
