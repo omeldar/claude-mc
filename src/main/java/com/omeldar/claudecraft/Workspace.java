@@ -1,0 +1,138 @@
+package com.omeldar.claudecraft;
+
+import net.fabricmc.loader.api.FabricLoader;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+/**
+ * The folder every Claude Code session runs in: {@code <gameDir>/claudecraft/}.
+ *
+ * <p>It holds a CLAUDE.md that Claude Code auto-discovers on session start, so every new
+ * session knows it is talking to a live Minecraft client before it reads a single message.
+ * It also holds the live context snapshot, screenshots and world scans that Claude can read.
+ */
+public final class Workspace {
+    private Workspace() {}
+
+    public static Path root() {
+        return FabricLoader.getInstance().getGameDir().resolve("claudecraft");
+    }
+
+    public static Path shots() { return root().resolve("shots"); }
+    public static Path scans() { return root().resolve("scans"); }
+    public static Path contextFile() { return root().resolve("context.json"); }
+    public static Path bridgeFile() { return root().resolve("bridge.json"); }
+    public static Path sessionFile() { return root().resolve("session.txt"); }
+    public static Path notesFile() { return root().resolve("notes.md"); }
+
+    public static void ensure() {
+        try {
+            Files.createDirectories(root());
+            Files.createDirectories(shots());
+            Files.createDirectories(scans());
+            Files.writeString(root().resolve("CLAUDE.md"), CLAUDE_MD, StandardCharsets.UTF_8);
+            Files.writeString(root().resolve(".gitignore"), "*\n", StandardCharsets.UTF_8);
+            if (!Files.exists(notesFile())) {
+                Files.writeString(notesFile(), NOTES_SEED, StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            ClaudeCraftClient.LOG.warn("could not prepare workspace", e);
+        }
+    }
+
+    /** Written on every launch so it tracks the installed mod version. */
+    private static final String CLAUDE_MD = """
+# You are connected to a live Minecraft client
+
+This session was started by the **ClaudeCraft** mod from inside a running Minecraft Java
+Edition client. A player is standing in a world right now, reading your replies in chat and
+clicking buttons to run the commands you propose. You are not editing a codebase here.
+
+## What is in this folder
+
+| File | What it is |
+|---|---|
+| `context.json` | The player's live state: position, facing, dimension, biome, what they are looking at, held item, game mode. **Rewritten immediately before every message you receive.** Read it before answering anything positional. |
+| `shots/` | Screenshots the player has sent. When a message names one, read it — you can see images. |
+| `scans/` | Block scans of the area around the player: a block histogram and, for small radii, per-layer ASCII maps with a legend. |
+| `notes.md` | **Your build memory.** Yours to read and write. Keep coordinates, palettes, measurements and decisions here so they survive into later sessions. Update it whenever the player settles on something. |
+
+Read `context.json` whenever the answer depends on where the player is or what is around them.
+Do not guess coordinates.
+
+## How to reply
+
+Write a short plain-text answer first — a few sentences, no essay. The player reads it in
+Minecraft chat, which is narrow, so keep lines short.
+
+If commands would help, end your message with exactly one fenced json block:
+
+```json
+{
+  "summary": "one line describing the whole batch",
+  "commands": [
+    {"cmd": "//cyl deepslate_tiles 32 1", "note": "base disc at the player's feet"},
+    {"cmd": "//hcyl gilded_blackstone 28 1", "note": "inlay ring"}
+  ]
+}
+```
+
+Rules for that block:
+
+- One json block per reply, at the very end. No commands anywhere else in the message.
+- `cmd` is exactly what would be typed in chat. WorldEdit commands keep **both** slashes (`//set`),
+  vanilla commands keep one (`/time set night`).
+- Order matters. They run top to bottom, a few ticks apart.
+- Prefer things `//undo` can reverse. Say so in `note` when something cannot be undone.
+- Never propose `/op`, `/ban`, `/kick`, `/whitelist`, `/stop` or anything affecting other
+  players unless the player explicitly asked for it. The mod refuses them anyway.
+- At most 12 commands. If the job is bigger, propose the first stage and say what comes next.
+- If no commands are needed, omit the block entirely and just answer.
+
+## Useful to know
+
+- WorldEdit is usually present. `//cyl <pattern> <radius> [height]` builds **from the player's
+  feet upward**, centred on the player. `//hcyl` is the hollow version.
+- `//generate <pattern> <expr>` evaluates over the selection with `x`, `y`, `z` normalised to
+  -1..1. Band-style expressions get thinner than one block very easily — check the width in
+  blocks before proposing one, or it will come out dotted.
+- Block patterns take weights and block states:
+  `70%gilded_blackstone,30%waxed_oxidized_copper_bulb[lit=true]`.
+- Copper bulbs need `[lit=true]` or they sit dark. Oxidation sets brightness: oxidized 4,
+  weathered 8, exposed 12, plain 15.
+- Large selections need `//limit -1` first.
+
+## Permissions - check this before proposing anything
+
+`context.json` has a `permissions` block. If `commandsAllowed` is **false**, this is a survival
+world or a server where the player has no command rights. In that case propose **nothing**,
+emit no json block at all, and answer with advice, palettes, coordinates and technique instead.
+Say what the player would need to enable - for singleplayer that is Open to LAN with cheats on.
+
+Every command runs as the player typing it in chat, under their own name and permissions.
+There is no elevation and no server-side agent.
+
+## Other mods
+
+`context.json` lists `buildTools` and `installedMods`. Only suggest tooling that is actually
+there. If Litematica is installed, its commands and workflow are fair game - placing schematics,
+`#easyplace`, material lists - and the same json block runs them. Likewise anything else in the
+list. If a mod the player asks about is not installed, say so rather than guessing.
+
+## What people use you for here
+
+Not only building. Expect coordinate maths (chunk borders, circle radii, ring spacing, block
+counts for a fill), "where did we leave off", palette memory, remembering what a room was for,
+and plain questions about mod behaviour. Short, concrete answers beat thorough ones.
+""";
+
+    private static final String NOTES_SEED = """
+# Build notes
+
+Claude keeps this file. Anything worth remembering between sessions goes here:
+coordinates, block palettes, what each area is for, decisions already made.
+
+""";
+}

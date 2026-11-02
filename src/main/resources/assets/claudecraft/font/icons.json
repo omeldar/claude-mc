@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "claudecraft:font/claude_mark.png",
+      "ascent": 8,
+      "height": 10,
+      "chars": [""]
+    }
+  ]
+}

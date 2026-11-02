@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "claudecraft",
+  "version": "${version}",
+  "name": "ClaudeCraft",
+  "description": "Prompt Claude Code from inside Minecraft. Claude proposes WorldEdit commands; you approve and run them with a click.",
+  "authors": ["omeldar"],
+  "contact": {
+    "homepage": "https://github.com/omeldar/claudecraft",
+    "sources": "https://github.com/omeldar/claudecraft",
+    "issues": "https://github.com/omeldar/claudecraft/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/claudecraft/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.omeldar.claudecraft.ClaudeCraftClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "worldedit": "*"
+  }
+}
