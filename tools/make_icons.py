@@ -20,35 +20,41 @@ import struct
 import zlib
 
 # Lumi, on a 16x16 grid. Each letter is a colour below; "." is transparent.
+# The stick is wood brown and the flame sits above it with a glow, so the whole thing
+# reads as a redstone torch rather than a stalk growing out of his head. A lighter top
+# band and a darker right column give the body a cube's shading.
 LUMI = [
-    ".......GG.......",
-    ".......GG.......",
-    ".......OO.......",
+    "......gRRg......",
+    "......gRRg......",
+    ".......SS.......",
+    ".......SS.......",
     "..OOOOOOOOOOOO..",
-    ".OLLLLLLLLLLLLO.",
+    ".OTTTTTTTTTTTTO.",
+    ".OLLWKLLLLWKLMO.",
+    ".OLLKKLLLLKKLMO.",
     ".OLLLLLLLLLLLMO.",
-    ".OMMKKMMMMKKMSO.",
-    ".OMMKWMMMMKWMSO.",
-    ".OMMKKMMMMKKMSO.",
-    ".OPPMMMMMMMMPPO.",
-    ".OMMMKMMMMKMMSO.",
-    ".OMMMMKKKKMMMSO.",
-    ".OSMMMMMMMMMSSO.",
-    ".OSSSSSSSSSSSSO.",
+    ".OLLLKLLLLKLLMO.",
+    ".OLLLLKKKKLLLMO.",
+    ".OLLLLLLLLLLLMO.",
+    ".OMMMMMMMMMMMMO.",
+    ".ODDDDDDDDDDDDO.",
     "..OOOOOOOOOOOO..",
-    "...OOO....OOO...",
+    "...OO......OO...",
 ]
+assert all(len(r) == 16 for r in LUMI) and len(LUMI) == 16, "Lumi must stay 16x16"
 
-# Redstone reds, plus his face and the little light on his head.
+# Redstone reds, with a lit torch on his head and a friendly face.
 COLOURS = {
-    "L": (255, 74, 54),
-    "M": (212, 32, 15),
-    "S": (142, 20, 8),
-    "O": (58, 8, 4),
-    "K": (38, 6, 4),
-    "W": (255, 255, 255),
-    "P": (255, 134, 112),
-    "G": (255, 222, 120),
+    "T": (255, 120, 100),       # top face, catching the light
+    "L": (232, 70, 52),         # body, front face
+    "M": (176, 38, 23),         # right face, turned away from the light
+    "D": (124, 25, 15),         # bottom shade
+    "O": (58, 13, 8),           # outline
+    "K": (40, 8, 5),            # eyes and smile
+    "W": (255, 255, 255),       # eye highlight
+    "S": (86, 52, 30),          # torch stick, wood brown
+    "R": (255, 142, 60),        # torch flame
+    "g": (255, 150, 60, 130),   # the glow around it
 }
 
 
@@ -64,7 +70,8 @@ def lumi_icon(size):
         for x in range(size):
             cell = LUMI[y // scale][x // scale]
             if cell != ".":
-                px[y][x] = COLOURS[cell] + (255,)
+                c = COLOURS[cell]
+                px[y][x] = c if len(c) == 4 else c + (255,)
     return px
 
 
@@ -73,7 +80,7 @@ def lumi_glyph(colour):
     px = blank(len(LUMI), len(LUMI))
     for y, row in enumerate(LUMI):
         for x, cell in enumerate(row):
-            if cell not in ".KW":
+            if cell not in ".KWg":
                 px[y][x] = (colour[0], colour[1], colour[2], 255)
     return px
 
