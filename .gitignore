@@ -26,3 +26,6 @@ Thumbs.db
 
 # local build log
 build-log.txt
+
+# Python
+__pycache__/

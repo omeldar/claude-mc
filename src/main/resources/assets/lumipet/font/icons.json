@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "lumipet:font/mark.png",
+      "ascent": 8,
+      "height": 10,
+      "chars": [""]
+    }
+  ]
+}

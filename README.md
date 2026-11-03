@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="src/main/resources/assets/claudemc/icon.png" width="88" alt="">
+<img src="src/main/resources/assets/lumipet/icon.png" width="88" alt="Lumi, a happy little red block with a light on his head">
 
-# ClaudeMC
+# Lumi
 
-**Run your own Claude Code from inside Minecraft.**
+**Lumi, your AI assistant in Minecraft.**
 
-Ask a question in chat, get an answer in chat, and run the commands it proposes with a click.
+A happy little block who answers your questions, helps you build, and runs commands with one click.
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-62B47A?style=flat-square)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-DBD0B4?style=flat-square)](https://fabricmc.net/)
@@ -22,23 +22,29 @@ Ask a question in chat, get an answer in chat, and run the commands it proposes 
 
 ## Overview
 
-ClaudeMC is a client-side Fabric mod that connects Minecraft to the **Claude Code CLI already
-installed on your machine**. It sends Claude your question along with live context about where
-you are standing and what is around you, then turns the reply into commands you can review and
-run without leaving the game.
+Lumi is a cheerful little redstone-red block who lives in your Minecraft client. Ask him something
+in chat and he answers in chat. Ask him to build and he suggests commands you can review and run
+without leaving the game. He always knows where you are standing and what is around you, so you
+don't have to explain.
 
-The mod is free and bundles no Anthropic code or credentials. It launches the `claude` program
-you installed as a subprocess, so usage runs through your own Anthropic account, under your own
-agreement with Anthropic. See [Your Anthropic account](#your-anthropic-account) and
-[What leaves your computer](#what-leaves-your-computer) before you start. The conversation stays
-alive between prompts and across restarts.
+### What Lumi runs on
+
+Lumi is a character, not his own AI. His replies are written by **Claude**, through the
+**Claude Code CLI already installed on your machine**. The mod launches the `claude` program you
+installed as a subprocess, so usage runs through your own Anthropic account, under your own
+agreement with Anthropic. It bundles no Anthropic code or credentials.
+
+Read [Your Anthropic account](#your-anthropic-account) and
+[What leaves your computer](#what-leaves-your-computer) before you start. Conversations stay alive
+between prompts and across restarts.
 
 ## From one prompt to a finished build
 
 Describe what you want. The prompt screen takes multi-line text, and can attach a screenshot or
 a scan of the surrounding blocks so the answer fits the place you are standing in.
 
-<img src="docs/images/prompt-screen.png" width="100%" alt="The ClaudeMC prompt screen, holding the prompt: build a japanese style hut here with lots of details, flowers, and some water for decoration outside. Style it based on the biome.">
+> Build a japanese style hut here with lots of details, flowers, and some water for decoration
+> outside. Style it based on the biome.
 
 That prompt, with a 64-block scan attached, produced this:
 
@@ -63,8 +69,16 @@ biome" — the scan is what made that possible.
 
 1. Install Claude Code and sign in.
 2. Install Fabric Loader for 1.21.11 and Fabric API.
-3. Download `claudemc-*.jar` from [Releases](../../releases) and place it in your `mods` folder.
-4. Launch the game, join a world, and run `/claude hello`.
+3. Download `lumi-*.jar` from [Releases](../../releases) and place it in your `mods` folder.
+4. Launch the game, join a world, and run `/lumi hello`.
+
+### Upgrading from ClaudeMC
+
+Lumi used to be called ClaudeMC. Delete the old `claudemc-*.jar` from your `mods` folder first, or
+both will run. On first launch he moves `config/claudemc.json` and the
+`claudemc` game folder, including your world notes, to the new names, without overwriting anything.
+The old conversation can't be resumed, so you start a fresh session. Custom key binds go back to
+the defaults, and `/claude` is now `/lumi`.
 
 ## Usage
 
@@ -72,22 +86,22 @@ Press <kbd>H</kbd> for the prompt screen, or type a command in chat:
 
 | Command | Description |
 |---|---|
-| `/claude <prompt>` | Ask, continuing the current session |
-| `/claude new <prompt>` | Start a fresh session |
-| `/claude shot <prompt>` | Attach your most recent screenshot (press <kbd>F2</kbd> first) |
-| `/claude scan <r> <prompt>` | Attach a block scan of radius `r` (1–256) |
-| `/claude shot scan <r> <prompt>` | Attach both; either order works |
-| `/claude open` | Open the prompt screen |
-| `/claude last` | Reopen the approval menu |
-| `/claude undo` | Queue `//undo` |
-| `/claude cancel` | Discard anything queued and abort the request in flight |
-| `/claude model <id>` | Switch model — an alias or an exact id |
-| `/claude effort <level>` | `low`, `medium`, `high`, or `default` |
-| `/claude settings` | Open the settings screen |
-| `/claude keys` | Show bindings and conflicts, and rebind |
-| `/claude usage` | Quota windows and this session's token use |
-| `/claude notes` | Path to the current world's notes file |
-| `/claude status` | Session, model, permissions, and billing source |
+| `/lumi <prompt>` | Ask, continuing the current session |
+| `/lumi new <prompt>` | Start a fresh session |
+| `/lumi shot <prompt>` | Attach your most recent screenshot (press <kbd>F2</kbd> first) |
+| `/lumi scan <r> <prompt>` | Attach a block scan of radius `r` (1–256) |
+| `/lumi shot scan <r> <prompt>` | Attach both; either order works |
+| `/lumi open` | Open the prompt screen |
+| `/lumi last` | Reopen the approval menu |
+| `/lumi undo` | Queue `//undo` |
+| `/lumi cancel` | Discard anything queued and abort the request in flight |
+| `/lumi model <id>` | Switch model — an alias or an exact id |
+| `/lumi effort <level>` | `low`, `medium`, `high`, or `default` |
+| `/lumi settings` | Open the settings screen |
+| `/lumi keys` | Show bindings and conflicts, and rebind |
+| `/lumi usage` | Quota windows and this session's token use |
+| `/lumi notes` | Path to the current world's notes file |
+| `/lumi status` | Session, model, permissions, and billing source |
 
 `/ai` is accepted as a shorthand for all of the above.
 
@@ -109,23 +123,25 @@ spans of non-air blocks with exact coordinates, and anything absent is air.
 
 ### Notes
 
-Claude maintains a notes file per world — `notes/<world>.md` in the mod's working directory —
+Lumi keeps a notes file per world — `notes/<world>.md` in the mod's working directory —
 holding coordinates, palettes, and decisions. Singleplayer worlds are keyed by level name and
 servers by address, so work on one never appears in another.
 
 ## Asking in chat, and watching the commands run
 
-The prompt screen is convenient, not required. A `/claude` line in chat does the same job, and
+The prompt screen is convenient, not required. A `/lumi` line in chat does the same job, and
 the chat input stretches past vanilla's 256-character limit while you are typing one:
 
-<img src="docs/images/chat-prompt.png" width="100%" alt="The chat input reading: /claude use this island to build a big old medieval statue with a sword, with an empty island ahead">
+```
+/lumi use this island to build a big old medieval statue with a sword
+```
 
-Claude does not edit the world behind your back. Every command it issues is printed in chat as
+Lumi does not edit the world behind your back. Every command he issues is printed in chat as
 it goes out, in order, under your own name — so a build is something you watch happen rather
 than a diff you discover afterwards.
 
-Claude selects with `//pos1` and `//pos2`, fills with
-`//set stone_bricks`, carves back with `//set air`, and says when it is done. Each line is a
+He selects with `//pos1` and `//pos2`, fills with
+`//set stone_bricks`, carves back with `//set air`, and says when he is done. Each line is a
 command you could have typed yourself.
 
 When commands are proposed rather than run directly — outside creative, or whenever you prefer
@@ -134,15 +150,13 @@ to approve them — they arrive as clickable `[Run]` entries instead. See
 
 ## Settings
 
-<img src="docs/images/settings.png" width="100%" alt="The ClaudeMC settings screen showing model, effort, progress, command pacing, scan radius, world tools, and API key billing">
-
-Reachable from `/claude settings`, or from the cog beside ClaudeMC in Mod Menu. All options
+Reachable from `/lumi settings`, or from the cog beside Lumi in Mod Menu. All options
 apply to the next message; nothing requires editing files.
 
 ### Mod Menu
 
 [Mod Menu](https://modrinth.com/mod/modmenu) collects every installed mod's settings behind one
-tab, and ClaudeMC registers itself there so it lives alongside the rest rather than hiding
+tab, and Lumi registers itself there so it lives alongside the rest rather than hiding
 behind a chat command.
 
 It is entirely optional. The integration is compiled against the Mod Menu API but not bundled
@@ -151,7 +165,7 @@ is built from plain vanilla widgets — no configuration library is pulled in ei
 
 ### Keybinds
 
-Rebindable under **Options → Controls → Key Binds → ClaudeMC**, or via the **Key binds…**
+Rebindable under **Options → Controls → Key Binds → Lumi**, or via the **Key binds…**
 button in the settings screen.
 
 | Default | Action |
@@ -161,19 +175,19 @@ button in the settings screen.
 | *unbound* | Undo last WorldEdit |
 
 Defaults are chosen to avoid both vanilla and common build mods. Because that can only ever be
-true of one particular mod list, ClaudeMC checks its bindings against every installed mod when
-you join a world and reports any clash in chat with a rebinding link. `/claude keys` runs the
+true of one particular mod list, Lumi checks its bindings against every installed mod when
+you join a world and reports any clash in chat with a rebinding link. `/lumi keys` runs the
 same check on demand.
 
 ## Safety
 
-Every command ClaudeMC runs is sent as an ordinary chat command under your own name and your
+Every command Lumi runs is sent as an ordinary chat command under your own name and your
 own permissions. There is no elevation and no server-side component; nothing can be done that
 you could not have typed yourself.
 
-- **Permission is checked before Claude is asked.** The mod inspects the command tree the
-  server sent you. A world without cheats provides a minimal tree, so ClaudeMC knows it is
-  read-only, instructs Claude not to propose commands, and answers with advice.
+- **Permission is checked before Lumi is asked.** The mod inspects the command tree the
+  server sent you. A world without cheats provides a minimal tree, so Lumi knows it is
+  read-only, tells Lumi not to propose commands, and answers with advice.
 - **Nothing runs unprompted.** Commands enter the queue only when you click, except for direct
   world tools, which additionally require creative mode.
 - **Deny list.** `/op`, `/ban`, `/kick`, `/whitelist`, `/stop` and similar are refused in the
@@ -188,7 +202,7 @@ server you are on, and do not use scans or these tools where that is not allowed
 
 ## What leaves your computer
 
-This mod starts the Claude Code CLI you installed, and that program sends data to Anthropic under
+Lumi starts the Claude Code CLI you installed, and that program sends data to Anthropic under
 your own account and Anthropic's terms. The mod's author receives nothing.
 
 When you send a prompt, Claude can receive:
@@ -208,7 +222,7 @@ Claude Code also keeps local session transcripts of its own.
 
 On your machine:
 
-- The mod writes context, scans, copied screenshots and notes to `<gameDir>/claudemc/`.
+- The mod writes context, scans, copied screenshots and notes to `<gameDir>/lumi/`.
 - It runs a local server on `127.0.0.1` (port 25599 by default) so Claude Code can talk to the
   game. The server accepts no outside connections. Turn it off with `bridgeEnabled`, or
   **World tools** in the settings; Claude then loses the direct world tools.
@@ -229,7 +243,7 @@ responsibility.
 
 ### Billing
 
-ClaudeMC bills however your `claude` CLI is authenticated. The CLI's credential order places
+Lumi bills however your `claude` CLI is authenticated. The CLI's credential order places
 `ANTHROPIC_API_KEY` above a claude.ai login, so a key set for an unrelated project would
 otherwise turn every prompt into a per-token charge.
 
@@ -238,7 +252,7 @@ variables are removed from the environment handed to the CLI, which falls back t
 subscription login if you have one. If a key was present and ignored, the mod says so once.
 
 It can be enabled in **Settings → API key billing**. While enabled, every reply, the action bar
-and `/claude status` carry a warning glyph naming the credential that was charged.
+and `/lumi status` carry a warning glyph naming the credential that was charged.
 
 ## World tools
 
@@ -256,12 +270,12 @@ Each session is given an MCP server pointing back at the running client:
 Reads are always available, including on servers and outside creative (see
 [Safety](#safety)). Writes are refused outside creative, refused without command
 permission, filtered by the deny list, paced by the queue, and interruptible with
-`/claude cancel`. Refusals explain themselves, so Claude falls back to proposing commands for
+`/lumi cancel`. Refusals explain themselves, so Lumi falls back to proposing commands for
 manual approval rather than retrying.
 
 ## Configuration
 
-`config/claudemc.json` is created on first launch:
+`config/lumi.json` is created on first launch:
 
 ```jsonc
 {
@@ -271,7 +285,7 @@ manual approval rather than retrying.
   "timeoutSeconds": 240,
   "streaming": true,           // show progress while the reply arrives
   "commandDelayTicks": 5,      // gap between queued commands
-  "chatPromptLimit": 2000,     // chat input cap while typing a /claude line
+  "chatPromptLimit": 2000,     // chat input cap while typing a /lumi line
   "allowApiKey": false,        // see Billing
   "bridgeEnabled": true,
   "bridgePort": 25599,
@@ -285,10 +299,10 @@ manual approval rather than retrying.
 
 ```
   Minecraft client
-        │  /claude <prompt>
+        │  /lumi <prompt>
         ▼
   ┌───────────┐    writes    ┌──────────────────────────┐
-  │  ClaudeMC │ ───────────► │  <gameDir>/claudemc/     │
+  │    Lumi   │ ───────────► │  <gameDir>/lumi/         │
   │    mod    │              │    CLAUDE.md             │
   └─────┬─────┘              │    context.json          │
         │ spawns             │    notes/<world>.md      │
@@ -308,12 +322,12 @@ driving a Minecraft client before reading the first prompt.
 
 A loopback-only HTTP server (default `127.0.0.1:25599`) lets a Claude Code session you started
 yourself read game state and push proposals into the approval menu. The token is written to
-`claudemc/bridge.json`.
+`lumi/bridge.json`.
 
 ```bash
-curl -s -H "X-ClaudeMC-Token: $TOKEN" http://127.0.0.1:25599/context
+curl -s -H "X-Lumi-Token: $TOKEN" http://127.0.0.1:25599/context
 
-curl -s -X POST -H "X-ClaudeMC-Token: $TOKEN" \
+curl -s -X POST -H "X-Lumi-Token: $TOKEN" \
   -d '{"summary":"example","commands":[{"cmd":"//limit -1","note":"lift the block cap"}]}' \
   http://127.0.0.1:25599/propose
 ```

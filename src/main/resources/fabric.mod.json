@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "claudemc",
+  "id": "lumipet",
   "version": "${version}",
-  "name": "ClaudeMC",
-  "description": "Prompt Claude Code from inside Minecraft. Claude proposes WorldEdit commands; you approve and run them with a click.",
+  "name": "Lumi",
+  "description": "Lumi is a happy little block pet and your AI assistant in Minecraft. Runs on your own Claude Code install. Unofficial: not made or endorsed by Anthropic, Mojang or Microsoft.",
   "authors": ["omeldar"],
   "contact": {
     "homepage": "https://github.com/omeldar/claude-mc",
@@ -11,15 +11,15 @@
     "issues": "https://github.com/omeldar/claude-mc/issues"
   },
   "license": "MIT",
-  "icon": "assets/claudemc/icon.png",
+  "icon": "assets/lumipet/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": ["com.omeldar.claudemc.ClaudeMCClient"],
-    "modmenu": ["com.omeldar.claudemc.ModMenuIntegration"]
+    "client": ["com.omeldar.lumi.LumiClient"],
+    "modmenu": ["com.omeldar.lumi.ModMenuIntegration"]
   },
   "mixins": [
     {
-      "config": "claudemc.mixins.json",
+      "config": "lumipet.mixins.json",
       "environment": "client"
     }
   ],
