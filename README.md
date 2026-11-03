@@ -232,14 +232,8 @@ On your machine:
 You need your own Claude Code install, signed in to your own account. The mod does not read,
 store or relay your credentials.
 
-**Check Anthropic's terms yourself.** Anthropic's
-[legal and compliance page](https://code.claude.com/docs/en/legal-and-compliance) tells developers
-building products to use API keys, and restricts routing requests through Free, Pro, Max or Ultra
-plan credentials. It also says end users can sign in to the unmodified Claude Code binary with
-their own subscription. Anthropic has not reviewed this mod or confirmed that running it on a plan
-login is allowed, and it can enforce its rules without notice. An API key is the clearly supported
-route, but it is billed per token. Which you use, and any effect on your account, is your
-responsibility.
+Your use of Claude Code stays under your own agreement with Anthropic. Everyone runs Lumi on their
+own account: the mod never shares one person's account with another.
 
 ### Billing
 
