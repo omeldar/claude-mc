@@ -28,25 +28,21 @@ The mod requires no API key and adds no cost of its own. It launches `claude` as
 so it authenticates exactly as your terminal does, and it keeps the conversation alive between
 prompts and across restarts.
 
-## How it works
+## From one prompt to a finished build
 
-**1 — Describe what you want.** The prompt screen takes multi-line text and lets you attach a
-screenshot or a scan of the surrounding blocks. Model and effort are switchable per prompt.
+Describe what you want. The prompt screen takes multi-line text, and can attach a screenshot or
+a scan of the surrounding blocks so the answer fits the place you are standing in.
 
-<img src="docs/images/prompt-screen.png" width="100%" alt="The ClaudeMC prompt screen, with a multi-line prompt, attachment toggles, and model and effort selectors">
+<img src="docs/images/prompt-screen.png" width="100%" alt="The ClaudeMC prompt screen, holding the prompt: build a japanese style hut here with lots of details, flowers, and some water for decoration outside. Style it based on the biome.">
 
-**2 — Claude reads the world and builds.** With command permission in creative, Claude can call
-world tools directly: reading blocks, scanning regions, and issuing WorldEdit or vanilla
-commands. Every command appears in chat as it runs, under your own name.
+That prompt, with a 64-block scan attached, produced this:
 
-<img src="docs/images/building.png" width="100%" alt="Chat showing WorldEdit commands executing one by one, with the resulting statue in the world behind">
+<img src="docs/images/result.png" width="100%" alt="A Japanese-style hut among cherry blossom trees at sunset, built from the prompt above">
 
-**3 — The result.**
+<img src="docs/images/result-night.png" width="100%" alt="The same hut at night, lanterns lit, surrounded by flowers and cherry blossom">
 
-<img src="docs/images/result.png" width="100%" alt="A finished Japanese-style hut built from a single prompt">
-
-Outside creative, or anywhere you lack command permission, Claude is told not to propose
-commands at all and answers with advice instead. See [Safety](#safety).
+Nothing about the biome, the palette or the terrain was specified beyond "style it based on the
+biome" — the scan is what made that possible.
 
 ## Requirements
 
@@ -112,14 +108,40 @@ Claude maintains a notes file per world — `notes/<world>.md` in the mod's work
 holding coordinates, palettes, and decisions. Singleplayer worlds are keyed by level name and
 servers by address, so work on one never appears in another.
 
+## Watching the commands run
+
+Claude does not edit the world behind your back. Every command it issues is printed in chat as
+it goes out, in order, under your own name — so a build is something you watch happen rather
+than a diff you discover afterwards.
+
+<img src="docs/images/building.png" width="100%" alt="Chat showing WorldEdit selection and set commands executing one after another, with the statue they produced standing in the world behind">
+
+Here Claude is placing a statue: selecting with `//pos1` and `//pos2`, filling with
+`//set stone_bricks`, carving back with `//set air`, and narrating when it is done. Each line
+is a command you could have typed yourself.
+
+When commands are proposed rather than run directly — outside creative, or whenever you prefer
+to approve them — they arrive as clickable `[Run]` entries instead. See
+[Reviewing commands](#reviewing-commands).
+
 ## Settings
 
 <img src="docs/images/settings.png" width="100%" alt="The ClaudeMC settings screen showing model, effort, progress, command pacing, scan radius, world tools, and API key billing">
 
-Reachable from `/claude settings` or the cog beside ClaudeMC in Mod Menu. All options apply to
-the next message; nothing requires editing files.
+Reachable from `/claude settings`, or from the cog beside ClaudeMC in Mod Menu. All options
+apply to the next message; nothing requires editing files.
 
-<img src="docs/images/mod-menu.png" width="100%" alt="The ClaudeMC entry in Mod Menu">
+### Mod Menu
+
+[Mod Menu](https://modrinth.com/mod/modmenu) collects every installed mod's settings behind one
+tab, and ClaudeMC registers itself there so it lives alongside the rest rather than hiding
+behind a chat command.
+
+<img src="docs/images/mod-menu.png" width="100%" alt="The ClaudeMC entry in Mod Menu, showing the icon, version, description and a settings cog">
+
+It is entirely optional. The integration is compiled against the Mod Menu API but not bundled
+with it, so the mod loads normally whether or not Mod Menu is present, and the settings screen
+is built from plain vanilla widgets — no configuration library is pulled in either way.
 
 ### Keybinds
 
