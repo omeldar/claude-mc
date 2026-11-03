@@ -4,14 +4,17 @@
 
 # ClaudeMC
 
-**Claude Code, inside Minecraft.**
+**Run your own Claude Code from inside Minecraft.**
 
 Ask a question in chat, get an answer in chat, and run the commands it proposes with a click.
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-62B47A?style=flat-square)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-DBD0B4?style=flat-square)](https://fabricmc.net/)
 [![Java](https://img.shields.io/badge/Java-21+-F89820?style=flat-square)](https://adoptium.net/)
-[![License](https://img.shields.io/badge/License-MIT-D97757?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-C8200F?style=flat-square)](LICENSE)
+
+> **NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.**
+> Not made, endorsed or supported by Anthropic. Claude and Claude Code are trademarks of Anthropic.
 
 </div>
 
@@ -24,9 +27,11 @@ installed on your machine**. It sends Claude your question along with live conte
 you are standing and what is around you, then turns the reply into commands you can review and
 run without leaving the game.
 
-The mod requires no API key and adds no cost of its own. It launches `claude` as a subprocess,
-so it authenticates exactly as your terminal does, and it keeps the conversation alive between
-prompts and across restarts.
+The mod is free and bundles no Anthropic code or credentials. It launches the `claude` program
+you installed as a subprocess, so usage runs through your own Anthropic account, under your own
+agreement with Anthropic. See [Your Anthropic account](#your-anthropic-account) and
+[What leaves your computer](#what-leaves-your-computer) before you start. The conversation stays
+alive between prompts and across restarts.
 
 ## From one prompt to a finished build
 
@@ -96,8 +101,8 @@ stay clear of server chat-rate limits.
 ### Context
 
 Every prompt is accompanied by a freshly written snapshot of your position, facing, dimension,
-biome, light level, the block you are looking at, and which build mods are installed, so
-answers do not depend on you describing your surroundings.
+biome, light level, the block you are looking at, and your installed mods, so answers do not
+depend on you describing your surroundings.
 
 Scans extend to a 256-block radius. Air is never written: each layer is emitted as run-length
 spans of non-air blocks with exact coordinates, and anything absent is air.
@@ -119,9 +124,7 @@ Claude does not edit the world behind your back. Every command it issues is prin
 it goes out, in order, under your own name — so a build is something you watch happen rather
 than a diff you discover afterwards.
 
-<img src="docs/images/building.png" width="100%" alt="Chat showing WorldEdit selection and set commands executing one after another, with the finished statue standing on the island behind">
-
-Same island, a few seconds later. Claude selects with `//pos1` and `//pos2`, fills with
+Claude selects with `//pos1` and `//pos2`, fills with
 `//set stone_bricks`, carves back with `//set air`, and says when it is done. Each line is a
 command you could have typed yourself.
 
@@ -141,8 +144,6 @@ apply to the next message; nothing requires editing files.
 [Mod Menu](https://modrinth.com/mod/modmenu) collects every installed mod's settings behind one
 tab, and ClaudeMC registers itself there so it lives alongside the rest rather than hiding
 behind a chat command.
-
-<img src="docs/images/mod-menu.png" width="100%" alt="The ClaudeMC entry in Mod Menu, showing the icon, version, description and a settings cog">
 
 It is entirely optional. The integration is compiled against the Mod Menu API but not bundled
 with it, so the mod loads normally whether or not Mod Menu is present, and the settings screen
@@ -180,15 +181,61 @@ you could not have typed yourself.
 - **Singleplayer survival** can be enabled the usual way: pause → **Open to LAN** →
   *Allow Cheats: ON* → **Start LAN World**.
 
+**Block reads can see hidden blocks.** Scans and the read-only world tools see every block your
+client has loaded, including buried ones such as ores, and they are not limited by game mode or
+server. On a server this can work like X-ray, which many servers forbid. Follow the rules of the
+server you are on, and do not use scans or these tools where that is not allowed.
+
+## What leaves your computer
+
+This mod starts the Claude Code CLI you installed, and that program sends data to Anthropic under
+your own account and Anthropic's terms. The mod's author receives nothing.
+
+When you send a prompt, Claude can receive:
+
+- your prompt and the replies in that session
+- your position and facing, dimension, biome, light level, time of day, game mode, held item and
+  the block you are looking at
+- the world name, or the server's name and address
+- your installed mod list
+- block scans and screenshots, if you attach them or Claude requests a scan with the world tools
+- your per-world notes file
+
+A screenshot shows whatever was on screen, which can include chat and other players' names. How
+long Anthropic keeps this data, and whether it trains models on it, depends on your account type
+and settings: see [Anthropic's data usage page](https://code.claude.com/docs/en/data-usage).
+Claude Code also keeps local session transcripts of its own.
+
+On your machine:
+
+- The mod writes context, scans, copied screenshots and notes to `<gameDir>/claudemc/`.
+- It runs a local server on `127.0.0.1` (port 25599 by default) so Claude Code can talk to the
+  game. The server accepts no outside connections. Turn it off with `bridgeEnabled`, or
+  **World tools** in the settings; Claude then loses the direct world tools.
+
+## Your Anthropic account
+
+You need your own Claude Code install, signed in to your own account. The mod does not read,
+store or relay your credentials.
+
+**Check Anthropic's terms yourself.** Anthropic's
+[legal and compliance page](https://code.claude.com/docs/en/legal-and-compliance) tells developers
+building products to use API keys, and restricts routing requests through Free, Pro, Max or Ultra
+plan credentials. It also says end users can sign in to the unmodified Claude Code binary with
+their own subscription. Anthropic has not reviewed this mod or confirmed that running it on a plan
+login is allowed, and it can enforce its rules without notice. An API key is the clearly supported
+route, but it is billed per token. Which you use, and any effect on your account, is your
+responsibility.
+
 ### Billing
 
 ClaudeMC bills however your `claude` CLI is authenticated. The CLI's credential order places
 `ANTHROPIC_API_KEY` above a claude.ai login, so a key set for an unrelated project would
 otherwise turn every prompt into a per-token charge.
 
-API key billing is therefore **disabled by default and enforced**: the credential variables are
-removed from the environment handed to the CLI, which falls back to your subscription. If a key
-was present and ignored, the mod says so once.
+API key billing is therefore **disabled by default**, to prevent surprise charges: the credential
+variables are removed from the environment handed to the CLI, which falls back to your
+subscription login if you have one. If a key was present and ignored, the mod says so once.
 
 It can be enabled in **Settings → API key billing**. While enabled, every reply, the action bar
 and `/claude status` carry a warning glyph naming the credential that was charged.
@@ -206,7 +253,8 @@ Each session is given an MCP server pointing back at the running client:
 | `run_command`, `run_commands` | Execute commands — creative and command permission only |
 | `say` | Write a line to the player's chat |
 
-Reads are always available. Writes are refused outside creative, refused without command
+Reads are always available, including on servers and outside creative (see
+[Safety](#safety)). Writes are refused outside creative, refused without command
 permission, filtered by the deny list, paced by the queue, and interruptible with
 `/claude cancel`. Refusals explain themselves, so Claude falls back to proposing commands for
 manual approval rather than retrying.
@@ -291,4 +339,8 @@ Gradle provisions a matching JDK automatically. Note that Fabric Loom requires a
 
 MIT — see [LICENSE](LICENSE).
 
-Not affiliated with Mojang or Microsoft. Claude and Claude Code are products of Anthropic.
+NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.
+Not made, endorsed or supported by Anthropic. Claude and Claude Code are trademarks of Anthropic.
+
+This project is published and maintained by [omeldar](https://github.com/omeldar), who alone is
+responsible for it. Contact: [GitHub Issues](https://github.com/omeldar/claude-mc/issues).
