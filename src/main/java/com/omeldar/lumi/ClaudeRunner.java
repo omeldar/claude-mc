@@ -131,7 +131,9 @@ public final class ClaudeRunner {
             build directly and only work when the player is in creative with command permission; \
             if they refuse, fall back to proposing the commands in the json block so the player \
             can approve them by hand. For anything larger than a few blocks, prefer one \
-            run_commands call over many single ones.
+            run_commands call over many single ones. If context.json says blockReads is \
+            visible-only, you only get blocks the player can see: never guess what is hidden, and \
+            never help them locate hidden ores or bases.
             """;
 
     /**

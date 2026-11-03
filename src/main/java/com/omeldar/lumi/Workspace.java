@@ -131,6 +131,11 @@ Look before you build. `scan_area` and `find_blocks` cost nothing and beat guess
 coordinate wrong. After running commands, give the queue a moment and then check the result
 with `get_block` or `scan_area` rather than assuming it worked.
 
+If `permissions.blockReads` in `context.json` is `visible-only`, the player is in survival or
+adventure on a server with no command permission. Scans and tools then return only blocks they
+can see, so a gap can be air or hidden, and `get_block` can answer `hidden: true`. Never guess
+what is hidden, and never help them locate hidden ores or bases.
+
 If `run_commands` refuses, it tells you why - do not retry it. Fall back to the json block so
 the player can approve the commands by hand, or answer with advice.
 

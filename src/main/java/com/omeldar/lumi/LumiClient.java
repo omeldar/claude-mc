@@ -416,13 +416,19 @@ public class LumiClient implements ClientModInitializer {
         }
 
         if (scanRadius > 0) {
-            if (scanRadius > 96) Chat.dim("scanning r=" + scanRadius + ", this takes a moment");
+            boolean limited = BlockSight.limited(mc);
+            if (limited) {
+                Chat.dim("on this server, scans only include blocks you can see, up to "
+                        + BlockSight.LIMITED_SCAN_RADIUS + " blocks away");
+            } else if (scanRadius > 96) {
+                Chat.dim("scanning r=" + scanRadius + ", this takes a moment");
+            }
             Path scan = WorldScan.dump(mc, scanRadius);
             if (scan != null) {
                 full.append("\nA block scan of the area is at scans/")
                     .append(scan.getFileName())
                     .append(" - read it for the blocks actually around the player.");
-                Chat.dim("attached " + scan.getFileName() + " (r=" + scanRadius + ")");
+                Chat.dim("attached " + scan.getFileName() + " (r=" + (limited ? Math.min(scanRadius, BlockSight.LIMITED_SCAN_RADIUS) : scanRadius) + ")");
             }
         }
 

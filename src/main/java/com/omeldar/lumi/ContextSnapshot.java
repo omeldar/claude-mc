@@ -69,6 +69,7 @@ public final class ContextSnapshot {
         perms.addProperty("note", CommandPermissions.allowed(mc)
                 ? "Commands run as this player, under their own name and permissions."
                 : "READ-ONLY: do not propose commands. " + CommandPermissions.explain(mc));
+        perms.addProperty("blockReads", BlockSight.limited(mc) ? "visible-only" : "all");
         root.add("permissions", perms);
 
         JsonObject notes = new JsonObject();

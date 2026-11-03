@@ -119,7 +119,8 @@ biome, light level, the block you are looking at, and your installed mods, so an
 depend on you describing your surroundings.
 
 Scans extend to a 256-block radius. Air is never written: each layer is emitted as run-length
-spans of non-air blocks with exact coordinates, and anything absent is air.
+spans of non-air blocks with exact coordinates, and anything absent is air. On servers where you
+have no command permission, scans are more limited: see [Safety](#safety).
 
 ### Notes
 
@@ -195,10 +196,11 @@ you could not have typed yourself.
 - **Singleplayer survival** can be enabled the usual way: pause → **Open to LAN** →
   *Allow Cheats: ON* → **Start LAN World**.
 
-**Block reads can see hidden blocks.** Scans and the read-only world tools see every block your
-client has loaded, including buried ones such as ores, and they are not limited by game mode or
-server. On a server this can work like X-ray, which many servers forbid. Follow the rules of the
-server you are on, and do not use scans or these tools where that is not allowed.
+**No X-ray on servers.** Your client holds more of the world than you can see, including buried
+ores. If you are in survival or adventure on a server without command permission, Lumi only gets
+blocks you could see from where you stand, and scans reach 64 blocks at most. In singleplayer, with
+command permission, or in creative or spectator mode, he can read every loaded block. Other
+server rules may still apply to using an AI helper, so check the rules of the server you are on.
 
 ## What leaves your computer
 
@@ -261,8 +263,8 @@ Each session is given an MCP server pointing back at the running client:
 | `run_command`, `run_commands` | Execute commands — creative and command permission only |
 | `say` | Write a line to the player's chat |
 
-Reads are always available, including on servers and outside creative (see
-[Safety](#safety)). Writes are refused outside creative, refused without command
+Reads are always available, limited to what you can see on servers where you have no command
+permission (see [Safety](#safety)). Writes are refused outside creative, refused without command
 permission, filtered by the deny list, paced by the queue, and interruptible with
 `/lumi cancel`. Refusals explain themselves, so Lumi falls back to proposing commands for
 manual approval rather than retrying.

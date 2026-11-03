@@ -146,7 +146,9 @@ public final class McpBridge {
         result.add("capabilities", caps);
         result.add("serverInfo", info);
         result.addProperty("instructions",
-                "Tools for the Minecraft client this session is attached to. Reads always work. "
+                "Tools for the Minecraft client this session is attached to. Reads work everywhere, "
+              + "but for a survival or adventure player without command permission on a server "
+              + "they only return blocks the player can see. "
               + "run_command and run_commands only work in creative with commands enabled; "
               + "check can_build in get_context before relying on them.");
         return result;
@@ -172,7 +174,8 @@ public final class McpBridge {
                 "{\"type\":\"object\",\"properties\":{},\"required\":[]}"));
 
         tools.add(tool("get_block",
-                "The block at one exact coordinate, with its full block state.",
+                "The block at one exact coordinate, with its full block state. Returns hidden:true "
+              + "when the block is limited to what the player can see and they cannot see it.",
                 "{\"type\":\"object\",\"properties\":{"
               + "\"x\":{\"type\":\"integer\"},\"y\":{\"type\":\"integer\"},\"z\":{\"type\":\"integer\"}},"
               + "\"required\":[\"x\",\"y\",\"z\"]}"));
@@ -180,8 +183,9 @@ public final class McpBridge {
         tools.add(tool("scan_area",
                 "Scan a cylinder around the player, three y-layers deep, and return every "
               + "non-air block as run-length spans with exact coordinates. Air is never "
-              + "listed - anything absent is air - so even a 256 radius stays readable. Use "
-              + "this to see what is actually built rather than guessing.",
+              + "listed, so even a 256 radius stays readable. Use this to see what is actually "
+              + "built rather than guessing. The output says if it is limited to visible blocks "
+              + "(radius 64 at most), where anything absent may be air or hidden.",
                 "{\"type\":\"object\",\"properties\":{"
               + "\"radius\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":256,"
               + "\"description\":\"horizontal radius in blocks; large values are fine, the "
@@ -189,7 +193,8 @@ public final class McpBridge {
 
         tools.add(tool("find_blocks",
                 "Find where a given block type occurs near the player. Returns up to 128 "
-              + "coordinates plus the bounding box they span.",
+              + "coordinates plus the bounding box they span. visibleOnly:true means only "
+              + "blocks the player can see were searched.",
                 "{\"type\":\"object\",\"properties\":{"
               + "\"block\":{\"type\":\"string\",\"description\":\"block id, e.g. minecraft:deepslate_tiles\"},"
               + "\"radius\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":48},"
@@ -261,11 +266,17 @@ public final class McpBridge {
         return onClient(mc -> {
             if (mc.world == null) return "not in a world";
             BlockPos pos = new BlockPos(x, y, z);
-            var state = mc.world.getBlockState(pos);
             JsonObject o = new JsonObject();
             o.addProperty("x", x);
             o.addProperty("y", y);
             o.addProperty("z", z);
+            if (BlockSight.limited(mc) && !BlockSight.canSee(mc, pos)) {
+                o.addProperty("hidden", true);
+                o.addProperty("note", "The player cannot see this block and has no command "
+                        + "permission on this server, so it is not available. Do not guess.");
+                return GSON.toJson(o);
+            }
+            var state = mc.world.getBlockState(pos);
             o.addProperty("block", Registries.BLOCK.getId(state.getBlock()).toString());
             o.addProperty("state", state.toString());
             o.addProperty("isAir", state.isAir());
@@ -297,6 +308,7 @@ public final class McpBridge {
 
         return onClient(mc -> {
             if (mc.world == null || mc.player == null) return "not in a world";
+            boolean limited = BlockSight.limited(mc);
             BlockPos feet = mc.player.getBlockPos();
             JsonArray hits = new JsonArray();
             int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
@@ -315,6 +327,7 @@ public final class McpBridge {
                             continue;
                         }
                         if (!id.equals(wanted)) continue;
+                        if (limited && !BlockSight.canSee(mc, cursor)) continue;
                         total++;
                         minX = Math.min(minX, cursor.getX()); maxX = Math.max(maxX, cursor.getX());
                         minY = Math.min(minY, cursor.getY()); maxY = Math.max(maxY, cursor.getY());
@@ -333,6 +346,11 @@ public final class McpBridge {
             JsonObject o = new JsonObject();
             o.addProperty("block", wanted);
             o.addProperty("searchRadius", radius);
+            if (limited) {
+                o.addProperty("visibleOnly", true);
+                o.addProperty("note", "Only blocks the player can see were searched. "
+                        + "Hidden ones may exist. Do not guess where.");
+            }
             o.addProperty("totalFound", total);
             o.addProperty("returned", hits.size());
             if (total > 0) {

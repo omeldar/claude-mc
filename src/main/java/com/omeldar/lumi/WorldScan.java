@@ -37,7 +37,8 @@ public final class WorldScan {
     /** Must be called on the client thread. Returns the file written, or null on failure. */
     public static Path dump(MinecraftClient mc, int radius) {
         if (mc.player == null || mc.world == null) return null;
-        int r = Math.max(1, Math.min(MAX_RADIUS, radius));
+        boolean limited = BlockSight.limited(mc);
+        int r = Math.max(1, Math.min(limited ? BlockSight.LIMITED_SCAN_RADIUS : MAX_RADIUS, radius));
         ClientWorld w = mc.world;
         BlockPos feet = mc.player.getBlockPos();
         int yFrom = feet.getY() - 1;
@@ -67,7 +68,7 @@ public final class WorldScan {
                         scanned++;
                         try {
                             var state = w.getBlockState(cursor);
-                            if (!state.isAir()) {
+                            if (!state.isAir() && (!limited || BlockSight.canSee(mc, cursor))) {
                                 id = Registries.BLOCK.getId(state.getBlock()).toString();
                             }
                         } catch (Exception ignored) {
@@ -108,7 +109,7 @@ public final class WorldScan {
             if (y == feet.getY()) layers.append("   (the layer the player stands in)");
             if (y == feet.getY() - 1) layers.append("   (the floor under the player)");
             layers.append('\n');
-            layers.append(body.length() == 0 ? "  (all air)\n" : body);
+            layers.append(body.length() == 0 ? (limited ? "  (nothing visible)\n" : "  (all air)\n") : body);
         }
 
         // Counts were per-run above; recount properly from the spans we already summed.
@@ -120,10 +121,17 @@ public final class WorldScan {
         out.append("radius: ").append(r)
            .append("   y layers: ").append(yFrom).append("..").append(yTo).append('\n');
         out.append("scanned ").append(scanned).append(" positions, ")
-           .append(solid).append(" of them not air\n\n");
+           .append(solid).append(limited ? " of them listed\n\n" : " of them not air\n\n");
 
         out.append("FORMAT\n");
-        out.append("  Air is never listed. Anything not mentioned below is air.\n");
+        if (limited) {
+            out.append("  VISIBLE BLOCKS ONLY. This player has no command permission on this server,\n");
+            out.append("  so this lists only blocks they could see from where they stand. Anything\n");
+            out.append("  not mentioned below is air OR hidden: never treat a gap as empty space,\n");
+            out.append("  and never guess or try to work out what is hidden.\n");
+        } else {
+            out.append("  Air is never listed. Anything not mentioned below is air.\n");
+        }
         out.append("  Each line is one z row: 'z=<z>  <x1>..<x2> <key>  <x1>..<x2> <key> ...'\n");
         out.append("  where x1..x2 is an inclusive run of the same block. A single block is\n");
         out.append("  written as one coordinate. Keys are in the legend.\n");
