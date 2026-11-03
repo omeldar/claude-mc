@@ -6,9 +6,9 @@
   "description": "Lumi is a happy little block pet and your AI assistant in Minecraft. Runs on your own Claude Code install. Unofficial: not made or endorsed by Anthropic, Mojang or Microsoft.",
   "authors": ["omeldar"],
   "contact": {
-    "homepage": "https://github.com/omeldar/claude-mc",
-    "sources": "https://github.com/omeldar/claude-mc",
-    "issues": "https://github.com/omeldar/claude-mc/issues"
+    "homepage": "https://github.com/omeldar/lumi",
+    "sources": "https://github.com/omeldar/lumi",
+    "issues": "https://github.com/omeldar/lumi/issues"
   },
   "license": "MIT",
   "icon": "assets/lumipet/icon.png",

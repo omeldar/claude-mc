@@ -335,8 +335,8 @@ curl -s -X POST -H "X-Lumi-Token: $TOKEN" \
 ## Building
 
 ```bash
-git clone https://github.com/omeldar/claude-mc.git
-cd claude-mc
+git clone https://github.com/omeldar/lumi.git
+cd lumi
 ./gradlew build              # jar is written to build/libs/
 python tools/make_icons.py   # regenerate the font sheet and mod icon
 ```
@@ -357,4 +357,4 @@ NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR 
 Not made, endorsed or supported by Anthropic. Claude and Claude Code are trademarks of Anthropic.
 
 This project is published and maintained by [omeldar](https://github.com/omeldar), who alone is
-responsible for it. Contact: [GitHub Issues](https://github.com/omeldar/claude-mc/issues).
+responsible for it. Contact: [GitHub Issues](https://github.com/omeldar/lumi/issues).
