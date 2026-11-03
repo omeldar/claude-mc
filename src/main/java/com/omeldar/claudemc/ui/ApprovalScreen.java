@@ -24,7 +24,7 @@ public class ApprovalScreen extends Screen {
     private static final int PER_PAGE = 5;
     private static final int ROW_HEIGHT = 34;
 
-    private static final int COLOR_TITLE = 0xFFD97757;
+    private static final int COLOR_TITLE = 0xFFE83A2A;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_NOTE = 0xFFA0A0A0;
     private static final int COLOR_DIM = 0xFF808080;

@@ -211,7 +211,7 @@ public final class McpBridge {
               + "\"required\":[\"commands\"]}"));
 
         tools.add(tool("say",
-                "Print a line to the player's chat, tagged with the Claude mark. Use it to "
+                "Print a line to the player's chat, tagged with the mod's mark. Use it to "
               + "narrate what you are doing during a long build.",
                 "{\"type\":\"object\",\"properties\":{"
               + "\"message\":{\"type\":\"string\"}},\"required\":[\"message\"]}"));

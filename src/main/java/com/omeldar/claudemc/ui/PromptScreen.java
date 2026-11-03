@@ -166,7 +166,7 @@ public class PromptScreen extends Screen {
 
         context.drawTextWithShadow(this.textRenderer,
                 Text.literal("Ask Claude").formatted(Formatting.BOLD),
-                left, boxTop - 26, 0xFFD97757);
+                left, boxTop - 26, 0xFFE83A2A);
 
         MinecraftClient mc = MinecraftClient.getInstance();
         String state = ClaudeRunner.isBusy() ? "busy - a reply is still coming"

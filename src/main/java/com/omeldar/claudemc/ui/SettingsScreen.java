@@ -173,7 +173,7 @@ public class SettingsScreen extends Screen {
         int left = (this.width - w) / 2;
 
         context.drawTextWithShadow(this.textRenderer,
-                Text.literal("ClaudeMC").formatted(Formatting.BOLD), left, 18, 0xFFD97757);
+                Text.literal("ClaudeMC").formatted(Formatting.BOLD), left, 18, 0xFFE83A2A);
         context.drawTextWithShadow(this.textRenderer,
                 Text.literal("Changes apply to the next message.").formatted(Formatting.GRAY),
                 left, 30, 0xFF7A7A7A);

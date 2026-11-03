@@ -87,7 +87,7 @@ public class ModelPickerScreen extends Screen {
         int left = (this.width - w) / 2;
 
         context.drawTextWithShadow(this.textRenderer,
-                Text.literal("Model").formatted(Formatting.BOLD), left, 18, 0xFFD97757);
+                Text.literal("Model").formatted(Formatting.BOLD), left, 18, 0xFFE83A2A);
 
         String note = "An alias means the newest of its family; an exact id pins a version.";
         if (!ClaudeRunner.resolvedModel().isBlank()) {

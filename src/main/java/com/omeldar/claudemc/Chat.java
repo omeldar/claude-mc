@@ -18,19 +18,19 @@ import net.minecraft.util.Identifier;
 public final class Chat {
     private Chat() {}
 
-    /** Bitmap font supplying the Claude mark at U+E000. */
+    /** Bitmap font supplying the mod's block mark at U+E000. */
     public static final Identifier ICON_FONT = Identifier.of("claudemc", "icons");
     private static final String GLYPH = "";
     private static final String WARN_GLYPH = "";
     /** Amber, so it reads as a caution rather than an error. */
     private static final int AMBER = 0xE6A03C;
 
-    /** Claude clay, so the mark reads as itself rather than as chat gold. */
-    private static final int CLAY = 0xD97757;
+    /** Redstone red, so the mark reads as itself rather than as chat gold. */
+    private static final int REDSTONE = 0xE83A2A;
 
     public static MutableText badge() {
         return Text.literal(GLYPH)
-                .styled(s -> s.withFont(new StyleSpriteSource.Font(ICON_FONT)).withColor(TextColor.fromRgb(CLAY)));
+                .styled(s -> s.withFont(new StyleSpriteSource.Font(ICON_FONT)).withColor(TextColor.fromRgb(REDSTONE)));
     }
 
     /** The warning triangle, shown whenever a reply was billed to an API key. */
