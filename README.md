@@ -108,17 +108,22 @@ Claude maintains a notes file per world — `notes/<world>.md` in the mod's work
 holding coordinates, palettes, and decisions. Singleplayer worlds are keyed by level name and
 servers by address, so work on one never appears in another.
 
-## Watching the commands run
+## Asking in chat, and watching the commands run
+
+The prompt screen is convenient, not required. A `/claude` line in chat does the same job, and
+the chat input stretches past vanilla's 256-character limit while you are typing one:
+
+<img src="docs/images/chat-prompt.png" width="100%" alt="The chat input reading: /claude use this island to build a big old medieval statue with a sword, with an empty island ahead">
 
 Claude does not edit the world behind your back. Every command it issues is printed in chat as
 it goes out, in order, under your own name — so a build is something you watch happen rather
 than a diff you discover afterwards.
 
-<img src="docs/images/building.png" width="100%" alt="Chat showing WorldEdit selection and set commands executing one after another, with the statue they produced standing in the world behind">
+<img src="docs/images/building.png" width="100%" alt="Chat showing WorldEdit selection and set commands executing one after another, with the finished statue standing on the island behind">
 
-Here Claude is placing a statue: selecting with `//pos1` and `//pos2`, filling with
-`//set stone_bricks`, carving back with `//set air`, and narrating when it is done. Each line
-is a command you could have typed yourself.
+Same island, a few seconds later. Claude selects with `//pos1` and `//pos2`, fills with
+`//set stone_bricks`, carves back with `//set air`, and says when it is done. Each line is a
+command you could have typed yourself.
 
 When commands are proposed rather than run directly — outside creative, or whenever you prefer
 to approve them — they arrive as clickable `[Run]` entries instead. See
