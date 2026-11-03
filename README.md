@@ -1,13 +1,12 @@
 <div align="center">
 
-<img src="src/main/resources/assets/claudemc/icon.png" width="96" alt="ClaudeMC">
+<img src="src/main/resources/assets/claudemc/icon.png" width="88" alt="">
 
 # ClaudeMC
 
 **Claude Code, inside Minecraft.**
 
-Ask in chat. Get an answer with the mark, not a player head.
-Click the commands you want to run.
+Ask a question in chat, get an answer in chat, and run the commands it proposes with a click.
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-62B47A?style=flat-square)](https://www.minecraft.net/)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-DBD0B4?style=flat-square)](https://fabricmc.net/)
@@ -18,130 +17,187 @@ Click the commands you want to run.
 
 ---
 
-## What it is
+## Overview
 
-ClaudeMC runs the **Claude Code CLI you already have installed** and pipes it into the game.
-There is no API key, no account to connect and no per-prompt billing on top of what Claude Code
-already costs you — the mod simply drives `claude` as a subprocess and keeps the session alive
-between prompts, so it remembers your build.
+ClaudeMC is a client-side Fabric mod that connects Minecraft to the **Claude Code CLI already
+installed on your machine**. It sends Claude your question along with live context about where
+you are standing and what is around you, then turns the reply into commands you can review and
+run without leaving the game.
 
-```
-/claude a dark floor for a 56-radius pit, gold inlay, nothing that burns my eyes
-```
+The mod requires no API key and adds no cost of its own. It launches `claude` as a subprocess,
+so it authenticates exactly as your terminal does, and it keeps the conversation alive between
+prompts and across restarts.
 
-```
-✳ Deepslate tiles with smooth basalt, gold only in the inlay lines. Oxidized
-✳ copper bulbs are light level 4 — the dimmest glow block in the game.
-✳
-✳ 4 commands — dark radial floor, r=56
-✳   1. //limit -1                                        [Run]  [Copy]
-✳        lift the block cap first
-✳   2. //cyl deepslate_tiles,smooth_basalt 56 1          [Run]  [Copy]
-✳        base disc at your feet
-✳   3. //hcyl gilded_blackstone 48 1                     [Run]  [Copy]
-✳   4. //hcyl gilded_blackstone 32 1                     [Run]  [Copy]
-✳ [Run all]  [Open menu]
-```
+## How it works
 
-Nothing runs until you click.
+**1 — Describe what you want.** The prompt screen takes multi-line text and lets you attach a
+screenshot or a scan of the surrounding blocks. Model and effort are switchable per prompt.
 
-## Features
+<img src="docs/images/prompt-screen.png" width="100%" alt="The ClaudeMC prompt screen, with a multi-line prompt, attachment toggles, and model and effort selectors">
+
+**2 — Claude reads the world and builds.** With command permission in creative, Claude can call
+world tools directly: reading blocks, scanning regions, and issuing WorldEdit or vanilla
+commands. Every command appears in chat as it runs, under your own name.
+
+<img src="docs/images/building.png" width="100%" alt="Chat showing WorldEdit commands executing one by one, with the resulting statue in the world behind">
+
+**3 — The result.**
+
+<img src="docs/images/result.png" width="100%" alt="A finished Japanese-style hut built from a single prompt">
+
+Outside creative, or anywhere you lack command permission, Claude is told not to propose
+commands at all and answers with advice instead. See [Safety](#safety).
+
+## Requirements
 
 | | |
 |---|---|
-| **Chat-native** | `/claude <prompt>` or `/ai <prompt>`. Replies are tagged with the Claude mark via a bitmap font, so they never look like another player talking. |
-| **Click to run** | Every proposed command is a clickable `[Run]` in chat, with `[Copy]` beside it and a full approval menu one click away. |
-| **Sessions that remember** | The conversation persists across prompts *and across game restarts*. `/claude new` starts fresh. |
-| **Live progress** | Replies stream, so you see each step — *"using scan_area"*, *"checking the floor"* — above the hotbar instead of a frozen wait. |
-| **Editable commands** | Every command in the approval menu is a text field. Nudge a radius or swap a block before you run it. |
-| **Room to type** | The prompt screen is a multi-line box (8000 chars), and the mod lifts vanilla's 256-character chat cap while the line starts with `/claude` or `/ai`. |
-| **Any model** | A picker listing every verified id — four Opus versions, three Sonnet, two Haiku, two Fable, plus the aliases. Type any other id and it's remembered. |
-| **Subscription-safe** | API key billing is off by default and *enforced* — key variables are stripped from the CLI's environment, so a stray `ANTHROPIC_API_KEY` can't quietly start charging you. Opt in explicitly, and every billed reply is flagged with a warning glyph. |
-| **Usage in game** | `/claude usage` shows your quota windows as bars with reset times, plus what this game session has spent. It also nudges you once when a window passes 80%. |
-| **It can see** | `/claude shot <prompt>` attaches your latest screenshot. `/claude scan <r> <prompt>` attaches a real block scan of the area — histogram plus per-layer ASCII maps. |
-| **It knows where you are** | Position, facing, dimension, biome, light level, the block you're looking at and your installed mods are refreshed before every single message. |
-| **Build memory, per world** | Claude keeps `notes/<world>.md`: coordinates, palettes, what each room is for. Each singleplayer world and each server gets its own file, so a build on one never bleeds into another. |
-| **Mod-aware** | Sees which build tools you actually have — WorldEdit, Litematica, Axiom — and only suggests what's installed. |
-| **Sparse scans** | Scans go out to a 256-block radius because air is never written. Each layer is run-length spans of non-air blocks with exact coordinates; anything absent is air. |
-| **Direct world access** | Claude gets real MCP tools into the running client: read any block, scan a region, find where a block type occurs — and, in creative with cheats on, build straight from your description. |
-| **Safe by construction** | On survival worlds and servers without permission it is told *not to propose commands at all*, and refuses to run them if it does. |
-
-## Billing: subscription only, unless you say otherwise
-
-ClaudeMC drives your installed `claude`, so it bills however that CLI is authenticated. The
-CLI's credential order puts `ANTHROPIC_API_KEY` **above** your claude.ai login — so a key set
-for something else entirely would silently turn every prompt into a per-token charge.
-
-So the mod doesn't leave it to chance. **API key billing is off by default, and off means
-enforced:** the key variables are removed from the environment handed to the CLI, which falls
-back to your subscription. If a key was present and ignored, it says so once.
-
-Turn it on in `/claude settings` → **API key billing** only if billed API usage is what you
-want. While it's on, every reply, the action bar and `/claude status` carry a ⚠ glyph naming
-the credential that was charged.
-
-## Safety model
-
-This is the part worth reading twice.
-
-- **Every command runs as you.** It goes out as a normal chat command under your own name and
-  your own permissions. There is no elevation, no server-side component, nothing that can do
-  something you couldn't have typed yourself.
-- **Nothing runs unprompted.** Commands are queued only when you click.
-- **Permission is checked before Claude is even asked.** The mod reads the command tree the
-  server sent you. A survival world without cheats gets a minimal tree, so ClaudeMC knows it
-  is read-only, tells Claude *not to propose commands*, and answers with advice instead.
-- **Singleplayer survival still works** — pause → **Open to LAN** → *Allow Cheats: ON* →
-  **Start LAN World**, and commands become available exactly as they would for you.
-- **Hard deny list.** `/op`, `/ban`, `/kick`, `/whitelist`, `/stop` and friends are refused in
-  the queue no matter what comes back. Editable in the config.
-- **Rate limited.** Commands go out a few ticks apart so server anti-spam never kicks you.
+| Minecraft | 1.21.11 |
+| Loader | [Fabric](https://fabricmc.net/use/) + [Fabric API](https://modrinth.com/mod/fabric-api) |
+| Java | 21 or newer |
+| CLI | [Claude Code](https://claude.com/claude-code), signed in — `claude --version` must work |
+| Optional | WorldEdit (strongly recommended), [Mod Menu](https://modrinth.com/mod/modmenu) for the settings button |
 
 ## Install
 
-1. Install [Claude Code](https://claude.com/claude-code) and sign in — `claude --version` must work.
-2. Install [Fabric Loader](https://fabricmc.net/use/) for **1.21.11** and
-   [Fabric API](https://modrinth.com/mod/fabric-api).
-3. Drop `claudemc-*.jar` from [Releases](../../releases) into your `mods/` folder.
-4. Launch, join a world, and type `/claude hello`.
+1. Install Claude Code and sign in.
+2. Install Fabric Loader for 1.21.11 and Fabric API.
+3. Download `claudemc-*.jar` from [Releases](../../releases) and place it in your `mods` folder.
+4. Launch the game, join a world, and run `/claude hello`.
 
-WorldEdit is optional but strongly recommended — most useful answers are WorldEdit commands.
+## Usage
 
-## Commands
+Press <kbd>H</kbd> for the prompt screen, or type a command in chat:
 
-| Command | What it does |
+| Command | Description |
 |---|---|
-| `/claude <prompt>` | Ask, keeping the current session |
+| `/claude <prompt>` | Ask, continuing the current session |
 | `/claude new <prompt>` | Start a fresh session |
-| `/claude shot <prompt>` | Attach your newest screenshot (press <kbd>F2</kbd> first) |
+| `/claude shot <prompt>` | Attach your most recent screenshot (press <kbd>F2</kbd> first) |
 | `/claude scan <r> <prompt>` | Attach a block scan of radius `r` (1–256) |
-| `/claude shot scan <r> <prompt>` | Attach **both** — either order works |
-| `/claude model <name>` | `opus`, `sonnet`, `haiku`, `fable`, or a full model id |
-| `/claude effort <level>` | `low`, `medium`, `high`, `default` |
-| `/claude open` | The prompt screen, with attachment toggles |
-| `/claude usage` | Quota windows and what this session cost |
-| `/claude settings` | The settings screen |
-| `/claude keys` | Bindings, conflicts, and rebinding |
-| `/claude notes` | Where this world's notes live |
+| `/claude shot scan <r> <prompt>` | Attach both; either order works |
+| `/claude open` | Open the prompt screen |
 | `/claude last` | Reopen the approval menu |
 | `/claude undo` | Queue `//undo` |
-| `/claude cancel` | Drop anything still queued |
-| `/claude status` | Session, model, permissions, bridge |
+| `/claude cancel` | Discard anything queued and abort the request in flight |
+| `/claude model <id>` | Switch model — an alias or an exact id |
+| `/claude effort <level>` | `low`, `medium`, `high`, or `default` |
+| `/claude settings` | Open the settings screen |
+| `/claude keys` | Show bindings and conflicts, and rebind |
+| `/claude usage` | Quota windows and this session's token use |
+| `/claude notes` | Path to the current world's notes file |
+| `/claude status` | Session, model, permissions, and billing source |
 
-`/ai` is a shorthand for all of them.
+`/ai` is accepted as a shorthand for all of the above.
+
+### Reviewing commands
+
+Proposed commands arrive in chat as clickable `[Run]` and `[Copy]` entries, with `[Run all]`
+and a paged approval menu alongside. The menu renders each command as an editable field, so a
+radius or a block can be adjusted before it is sent. Commands are queued a few ticks apart to
+stay clear of server chat-rate limits.
+
+### Context
+
+Every prompt is accompanied by a freshly written snapshot of your position, facing, dimension,
+biome, light level, the block you are looking at, and which build mods are installed, so
+answers do not depend on you describing your surroundings.
+
+Scans extend to a 256-block radius. Air is never written: each layer is emitted as run-length
+spans of non-air blocks with exact coordinates, and anything absent is air.
+
+### Notes
+
+Claude maintains a notes file per world — `notes/<world>.md` in the mod's working directory —
+holding coordinates, palettes, and decisions. Singleplayer worlds are keyed by level name and
+servers by address, so work on one never appears in another.
+
+## Settings
+
+<img src="docs/images/settings.png" width="100%" alt="The ClaudeMC settings screen showing model, effort, progress, command pacing, scan radius, world tools, and API key billing">
+
+Reachable from `/claude settings` or the cog beside ClaudeMC in Mod Menu. All options apply to
+the next message; nothing requires editing files.
+
+<img src="docs/images/mod-menu.png" width="100%" alt="The ClaudeMC entry in Mod Menu">
+
+### Keybinds
+
+Rebindable under **Options → Controls → Key Binds → ClaudeMC**, or via the **Key binds…**
+button in the settings screen.
+
+| Default | Action |
+|---|---|
+| <kbd>H</kbd> | Open the prompt screen |
+| <kbd>U</kbd> | Reopen the last proposal |
+| *unbound* | Undo last WorldEdit |
+
+Defaults are chosen to avoid both vanilla and common build mods. Because that can only ever be
+true of one particular mod list, ClaudeMC checks its bindings against every installed mod when
+you join a world and reports any clash in chat with a rebinding link. `/claude keys` runs the
+same check on demand.
+
+## Safety
+
+Every command ClaudeMC runs is sent as an ordinary chat command under your own name and your
+own permissions. There is no elevation and no server-side component; nothing can be done that
+you could not have typed yourself.
+
+- **Permission is checked before Claude is asked.** The mod inspects the command tree the
+  server sent you. A world without cheats provides a minimal tree, so ClaudeMC knows it is
+  read-only, instructs Claude not to propose commands, and answers with advice.
+- **Nothing runs unprompted.** Commands enter the queue only when you click, except for direct
+  world tools, which additionally require creative mode.
+- **Deny list.** `/op`, `/ban`, `/kick`, `/whitelist`, `/stop` and similar are refused in the
+  queue regardless of what is returned. Configurable.
+- **Singleplayer survival** can be enabled the usual way: pause → **Open to LAN** →
+  *Allow Cheats: ON* → **Start LAN World**.
+
+### Billing
+
+ClaudeMC bills however your `claude` CLI is authenticated. The CLI's credential order places
+`ANTHROPIC_API_KEY` above a claude.ai login, so a key set for an unrelated project would
+otherwise turn every prompt into a per-token charge.
+
+API key billing is therefore **disabled by default and enforced**: the credential variables are
+removed from the environment handed to the CLI, which falls back to your subscription. If a key
+was present and ignored, the mod says so once.
+
+It can be enabled in **Settings → API key billing**. While enabled, every reply, the action bar
+and `/claude status` carry a warning glyph naming the credential that was charged.
+
+## World tools
+
+Each session is given an MCP server pointing back at the running client:
+
+| Tool | Description |
+|---|---|
+| `get_context` | Position, facing, biome, look target, installed mods, `can_build` |
+| `get_block` | One coordinate, with full block state |
+| `scan_area` | Cylinder scan to radius 256, as run-length spans of non-air blocks |
+| `find_blocks` | Where a block type occurs nearby, with a bounding box |
+| `run_command`, `run_commands` | Execute commands — creative and command permission only |
+| `say` | Write a line to the player's chat |
+
+Reads are always available. Writes are refused outside creative, refused without command
+permission, filtered by the deny list, paced by the queue, and interruptible with
+`/claude cancel`. Refusals explain themselves, so Claude falls back to proposing commands for
+manual approval rather than retrying.
 
 ## Configuration
 
-`config/claudemc.json`, created on first launch:
+`config/claudemc.json` is created on first launch:
 
 ```jsonc
 {
   "claudePath": "",            // empty = auto-detect
-  "model": "opus",             // opus | sonnet | haiku | fable | full model name
+  "model": "opus",             // alias or exact id
   "effort": "",                // low | medium | high
   "timeoutSeconds": 240,
-  "streaming": true,           // show progress as the reply arrives
+  "streaming": true,           // show progress while the reply arrives
   "commandDelayTicks": 5,      // gap between queued commands
+  "chatPromptLimit": 2000,     // chat input cap while typing a /claude line
+  "allowApiKey": false,        // see Billing
   "bridgeEnabled": true,
   "bridgePort": 25599,
   "defaultScanRadius": 24,
@@ -150,40 +206,40 @@ WorldEdit is optional but strongly recommended — most useful answers are World
 }
 ```
 
-## How it works
+## Architecture
 
 ```
   Minecraft client
-        │
         │  /claude <prompt>
         ▼
-  ┌──────────────┐   writes    ┌──────────────────────────┐
-  │  ClaudeMC │ ──────────► │  <gameDir>/claudemc/  │
-  │     mod      │             │   CLAUDE.md              │
-  └──────┬───────┘             │   context.json           │
-         │ spawns              │   notes.md               │
-         │                     │   shots/  scans/         │
-         ▼                     └──────────────────────────┘
-  claude -p --output-format json --resume <session>
-         │                              ▲
-         │ {"summary":…,"commands":[…]} │ reads
-         ▼
-  approval menu ──► click ──► command queue ──► chat, as you
+  ┌───────────┐    writes    ┌──────────────────────────┐
+  │  ClaudeMC │ ───────────► │  <gameDir>/claudemc/     │
+  │    mod    │              │    CLAUDE.md             │
+  └─────┬─────┘              │    context.json          │
+        │ spawns             │    notes/<world>.md      │
+        │                    │    shots/  scans/        │
+        ▼                    └──────────────────────────┘
+  claude -p --output-format stream-json --resume <session>
+        │                              ▲
+        │  {"summary":…,"commands":[…]} │ reads
+        ▼                              │
+  approval menu ──► click ──► queue ──► chat, as the player
 ```
 
-`CLAUDE.md` is auto-discovered by Claude Code on session start, so every new session already
-knows it is driving a Minecraft client before it reads your first word.
+`CLAUDE.md` is auto-discovered by Claude Code at session start, so a new session knows it is
+driving a Minecraft client before reading the first prompt.
 
 ### Bridge
 
-A loopback-only HTTP server (default `127.0.0.1:25599`) lets an **already running** Claude Code
-session — one you started in a terminal yourself — read the game state and push proposals into
-the approval menu. The token lives in `claudemc/bridge.json`.
+A loopback-only HTTP server (default `127.0.0.1:25599`) lets a Claude Code session you started
+yourself read game state and push proposals into the approval menu. The token is written to
+`claudemc/bridge.json`.
 
 ```bash
 curl -s -H "X-ClaudeMC-Token: $TOKEN" http://127.0.0.1:25599/context
+
 curl -s -X POST -H "X-ClaudeMC-Token: $TOKEN" \
-  -d '{"summary":"test","commands":[{"cmd":"//limit -1","note":"lift the cap"}]}' \
+  -d '{"summary":"example","commands":[{"cmd":"//limit -1","note":"lift the block cap"}]}' \
   http://127.0.0.1:25599/propose
 ```
 
@@ -192,69 +248,17 @@ curl -s -X POST -H "X-ClaudeMC-Token: $TOKEN" \
 ```bash
 git clone https://github.com/omeldar/claude-mc.git
 cd claude-mc
-./gradlew build          # jar lands in build/libs/
-python tools/make_icons.py   # regenerate the mark and mod icon
+./gradlew build              # jar is written to build/libs/
+python tools/make_icons.py   # regenerate the font sheet and mod icon
 ```
 
-Requires JDK 21+ — Gradle provisions a matching toolchain automatically.
-
-## Direct world access
-
-Every session the mod starts is handed an MCP server pointing back at your client, so Claude
-can look at the world instead of guessing:
-
-| Tool | What it does |
-|---|---|
-| `get_context` | Live position, facing, biome, look target, installed mods, `can_build` |
-| `get_block` | One exact coordinate with its full block state |
-| `scan_area` | Cylinder scan out to radius 256, as run-length spans of non-air blocks |
-| `find_blocks` | Where a block type occurs nearby, with a bounding box |
-| `run_command` · `run_commands` | Build directly — **creative + command permission only** |
-| `say` | Narrate progress into your chat during a long build |
-
-Reads always work. Writes are refused outside creative, refused without command permission,
-still filtered by the deny list, still spaced out by the queue, and still stoppable with
-`/claude cancel`. The refusal tells Claude *why*, so it falls back to proposing commands for
-you to approve instead of retrying.
-
-## Keybinds
-
-Rebindable in **Options → Controls → ClaudeMC**:
-
-| Default | Action |
-|---|---|
-| <kbd>H</kbd> | Open the prompt screen |
-| <kbd>U</kbd> | Reopen the last proposal |
-| *unbound* | Undo last WorldEdit |
-
-Defaults dodge the popular build mods as well as vanilla: <kbd>C</kbd> is Zoomify's zoom, and
-<kbd>V</kbd>, <kbd>M</kbd> and <kbd>I</kbd> belong to Litematica. Anything behind <kbd>F3</kbd>
-doesn't count, since those need the modifier held.
-
-That's only true of one particular mod list, though, so **on joining a world ClaudeMC checks its
-bindings against every other mod installed** and names any clash in chat with a `[Rebind]` link.
-`/claude keys` runs the same check on demand.
-
-## Settings
-
-Everything is adjustable in game, no file editing:
-
-- **Mod Menu** — the cog next to ClaudeMC in the Mods tab
-- `/claude settings` — the same screen
-- `/claude model <name>` and `/claude effort <level>` — quick switches
-
-Model, effort, live progress, the gap between queued commands, max commands per reply, default
-scan radius, the world-tools port and the path to `claude` all live there, plus a
-**Key binds...** button straight into vanilla's rebinding screen.
-
-The prompt screen is the comfortable way in: a text box, independent **Screenshot** and
-**Scan** toggles that combine freely, a session keep/new switch, and model + effort cyclers.
-Your choices stick between opens, and an unsent draft survives closing the screen.
+Gradle provisions a matching JDK automatically. Note that Fabric Loom requires a Java 25 JVM to
+*run* Gradle, while the mod itself targets Java 21.
 
 ## Roadmap
 
-- [ ] Render the proposal as a HUD list without opening a screen
-- [ ] Litematica schematic generation from a description
+- Render proposals as a HUD list without opening a screen
+- Litematica schematic generation from a description
 
 ## License
 
